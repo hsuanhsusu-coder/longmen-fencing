@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>龍門擊劍：決戰全中運</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --dragon-red: #e63946;
+      --champion-blue: #457b9d;
+      --gold: #ffb703;
+      --dark-bg: #0a0a0c;
+      --card-bg: #1a1b26;
+    }
+
+    body {
+      margin: 0; padding: 0; background-color: #000;
+      color: #fff; font-family: 'Noto Sans TC', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+      height: 100vh; overflow: hidden;
+      user-select: none; /* 防止連點時選取文字 */
+    }
+
+    /* 螢幕震動特效 */
+    @keyframes shake {
+      0% { transform: translate(2px, 1px) rotate(0deg); }
+      10% { transform: translate(-1px, -2px) rotate(-1deg); }
+      20% { transform: translate(-3px, 0px) rotate(1deg); }
+      30% { transform: translate(3px, 2px) rotate(0deg); }
+      40% { transform: translate(1px, -1px) rotate(1deg); }
+      50% { transform: translate(-1px, 2px) rotate(-1deg); }
+      60% { transform: translate(-3px, 1px) rotate(0deg); }
+      70% { transform: translate(3px, 1px) rotate(-1deg); }
+      80% { transform: translate(-1px, -1px) rotate(1deg); }
+      90% { transform: translate(1px, 2px) rotate(0deg); }
+      100% { transform: translate(0px, 0px) rotate(0deg); }
+    }
+    .shake-effect {
+      animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    #game-container {
+      width: 100%; max-width: 500px; height: 100vh;
+      display: flex; flex-direction: column;
+      background: radial-gradient(circle at center, #1a1a1d 0%, #000 100%);
+      box-shadow: 0 0 30px rgba(0,0,0,0.9);
+    }
+
+    /* 計分板 (LED 風格) */
+    #scoreboard {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 15px 20px; background-color: #050505; 
+      border-bottom: 3px solid #222; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    }
+    .player-box { text-align: center; width: 35%; }
+    .player-box h2 { margin: 0; font-size: 14px; color: #888; letter-spacing: 1px;}
+    .score { 
+      font-family: 'Orbitron', sans-serif; font-size: 48px; font-weight: 900; 
+      margin-top: 5px; text-shadow: 0 0 15px currentColor; 
+    }
+    #longmen-box h2 { color: var(--dragon-red); }
+    #champion-box h2 { color: var(--champion-blue); }
+
+    /* 播報區 */
+    #log-box {
+      flex-grow: 1; padding: 20px; text-align: center;
+      font-size: 18px; line-height: 1.6; display: flex;
+      flex-direction: column; justify-content: center; align-items: center;
+    }
+    .highlight { 
+      color: var(--gold); font-size: 24px; font-weight: 900; 
+      margin: 15px 0; font-style: italic; text-shadow: 2px 2px 4px #000;
+    }
+
+    /* 操作區 */
+    #control-panel {
+      padding: 20px; background-color: #0f0f11; min-height: 250px;
+      display: flex; flex-direction: column; justify-content: center;
+      border-top: 1px solid #333;
+    }
+
+    /* 讀秒按鈕 */
+    #action-btn {
+      width: 180px; height: 180px; border-radius: 50%;
+      background: linear-gradient(145deg, #2a2a2a, #0a0a0a);
+      border: 4px solid #444; color: #fff; font-size: 24px; font-weight: 900;
+      cursor: pointer; outline: none; transition: transform 0.1s;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5); 
+      margin: 0 auto; letter-spacing: 2px; text-transform: uppercase;
+    }
+    #action-btn:active { transform: scale(0.92); }
+    
+    .running {
+      border-color: var(--dragon-red) !important; color: var(--dragon-red) !important;
+      animation: heartbeat 0.8s infinite alternate !important;
+    }
+    @keyframes heartbeat {
+      0% { box-shadow: 0 0 10px var(--dragon-red), inset 0 0 10px var(--dragon-red); transform: scale(1); }
+      100% { box-shadow: 0 0 40px var(--dragon-red), inset 0 0 30px var(--dragon-red); transform: scale(1.05); }
+    }
+
+    /* 戰術卡牌 */
+    #tactics-container { display: none; flex-direction: column; gap: 15px; }
+    .tactics-title { text-align: center; margin-bottom: 5px; font-weight: 900; font-size: 20px; letter-spacing: 3px;}
+    .cards-row { display: flex; gap: 10px; }
+    .card-btn {
+      flex: 1; background: linear-gradient(180deg, #2b2d42 0%, #1a1b26 100%);
+      border: 2px solid #444; color: white; padding: 18px 5px; 
+      border-radius: 10px; font-size: 16px; font-weight: bold; 
+      cursor: pointer; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    .card-btn:hover { 
+      transform: translateY(-8px) scale(1.05); border-color: var(--gold); 
+      box-shadow: 0 10px 20px rgba(255, 183, 3, 0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    <div id="scoreboard">
+      <div id="longmen-box" class="player-box">
+        <h2>龍門 (你)</h2>
+        <div class="score" id="score-player" style="color:var(--dragon-red)">0</div>
+      </div>
+      <div style="font-family: 'Orbitron', sans-serif; font-size: 12px; color: #888; font-weight: 700; letter-spacing: 2px;">RACE TO 5</div>
+      <div id="champion-box" class="player-box">
+        <h2>雷霆 (AI)</h2>
+        <div class="score" id="score-ai" style="color:var(--champion-blue)">0</div>
+      </div>
+    </div>
+
+    <div id="log-box">
+      <div id="log-text" style="color: #ccc;">全中運總決賽！<br>按下準備，準備迎接第一劍...</div>
+      <div id="timer-result" class="highlight"></div>
+    </div>
+
+    <div id="control-panel">
+      <button id="action-btn">En Garde<br><span style="font-size: 14px; font-weight: 500; color:#888;">(準備)</span></button>
+
+      <div id="tactics-container">
+        <div id="tactics-title" class="tactics-title">選擇你的戰術</div>
+        <div class="cards-row" id="cards-row"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 🔊 街機風音效合成器 (Web Audio API)
+    // ==========================================
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    const sfx = {
+      heartbeat: () => {
+        if(!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(45, audioCtx.currentTime); 
+        osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        gain.gain.setValueAtTime(1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+      },
+      score: () => {
+        if(!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.1); 
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+      },
+      clash: () => {
+        if(!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+      }
+    };
+
+    // ==========================================
+    // 遊戲邏輯變數
+    // ==========================================
+    let pScore = 0, aScore = 0;
+    let startTime = 0;
+    let isRunning = false, isGameOver = false, isProcessing = false;
+    let currentRole = ''; 
+    let heartbeatInterval; // 控制心跳音效的變數
+
+    const gameContainer = document.getElementById('game-container');
+    const btn = document.getElementById('action-btn');
+    const tacticsPanel = document.getElementById('tactics-container');
+    const cardsRow = document.getElementById('cards-row');
+    const tacticsTitle = document.getElementById('tactics-title');
+    const logText = document.getElementById('log-text');
+    const timerResult = document.getElementById('timer-result');
+
+    // 螢幕震動
+    function triggerShake() {
+      gameContainer.classList.remove('shake-effect');
+      void gameContainer.offsetWidth; 
+      gameContainer.classList.add('shake-effect');
+    }
+
+    // 第一階段：讀秒
+    btn.addEventListener('click', () => {
+      initAudio(); // 初始化音效引擎 (解決瀏覽器限制)
+
+      if (isGameOver || isProcessing) { if(isGameOver) location.reload(); return; }
+
+      if (!isRunning) {
+        // 開始計時
+        startTime = performance.now();
+        isRunning = true;
+        btn.innerHTML = "Allez!<br><span style='font-size: 14px; color:#fff;'>(出劍)</span>";
+        btn.classList.add('running');
+        logText.innerHTML = "專注呼吸... 抓準 <strong style='color:#fff'>5.00 秒</strong> 的瞬間！";
+        timerResult.innerHTML = "";
+        
+        // 啟動心跳音效
+        sfx.heartbeat();
+        heartbeatInterval = setInterval(sfx.heartbeat, 800); 
+
+      } else {
+        // 停止計時
+        let seconds = (performance.now() - startTime) / 1000;
+        isRunning = false;
+        btn.classList.remove('running');
+        
+        // 停止心跳音效
+        clearInterval(heartbeatInterval);
+
+        evaluateTiming(seconds);
+      }
+    });
+
+    function evaluateTiming(sec) {
+      let timeStr = "<span style='font-family: Orbitron; font-size:22px; color:#fff'>" + sec.toFixed(3) + "s</span>";
+      btn.style.display = 'none'; 
+
+      if (sec >= 4.85 && sec <= 5.15) {
+        logText.innerHTML = `反應時間: ${timeStr}<br>爆發力無懈可擊！你化作閃電直接刺中對手！`;
+        timerResult.innerHTML = "🏆 完美啟動！直接得分！";
+        timerResult.style.color = "var(--gold)";
+        triggerShake(); 
+        sfx.score(); // 播放得分音
+        addScore('PLAYER');
+      } 
+      else if (sec >= 4.50 && sec <= 5.49) {
+        logText.innerHTML = `反應時間: ${timeStr}<br>步伐節奏優勢，成功佔據賽道中心。`;
+        timerResult.innerHTML = "⚔️ 奪得攻擊權！";
+        timerResult.style.color = "var(--dragon-red)";
+        showTactics('ATTACK');
+      } 
+      else if ((sec >= 4.00 && sec < 4.50) || (sec > 5.49 && sec <= 5.99)) {
+        logText.innerHTML = `反應時間: ${timeStr}<br>對手搶佔先機，你被迫後退防守。`;
+        timerResult.innerHTML = "🛡️ 失去攻擊權！";
+        timerResult.style.color = "var(--champion-blue)";
+        showTactics('DEFEND');
+      } 
+      else {
+        logText.innerHTML = `反應時間: ${timeStr}<br>${sec < 4 ? '太緊張了，提早搶拍犯規！' : '僵在原地淪為活靶！'}`;
+        timerResult.innerHTML = "❌ 嚴重失誤！對手得分！";
+        timerResult.style.color = "#ff5555";
+        triggerShake(); 
+        sfx.clash(); // 播放失誤音效
+        addScore('AI');
+      }
+    }
+
+    // 第二階段：戰術面板
+    function showTactics(role) {
+      currentRole = role;
+      tacticsPanel.style.display = 'flex';
+      
+      if (role === 'ATTACK') {
+        tacticsTitle.innerText = "【 進 攻 方 】";
+        tacticsTitle.style.color = "var(--dragon-red)";
+        cardsRow.innerHTML = `
+          <button class="card-btn" onclick="resolveTactics('DIRECT')">🗡️ 直劈頭</button>
+          <button class="card-btn" onclick="resolveTactics('BEAT')">💥 敲劍</button>
+          <button class="card-btn" onclick="resolveTactics('FEINT')">🎭 假動作</button>
+        `;
+      } else {
+        tacticsTitle.innerText = "【 防 守 方 】";
+        tacticsTitle.style.color = "var(--champion-blue)";
+        cardsRow.innerHTML = `
+          <button class="card-btn" onclick="resolveTactics('PARRY')">🛡️ 第三撥擋</button>
+          <button class="card-btn" onclick="resolveTactics('RETREAT')">💨 極限滑步</button>
+          <button class="card-btn" onclick="resolveTactics('LINE')">⚔️ 擊劍線</button>
+        `;
+      }
+    }
+
+    // 結算戰術
+    function resolveTactics(playerChoice) {
+      isProcessing = true;
+      tacticsPanel.style.display = 'none'; 
+      
+      // 子彈時間
+      logText.innerHTML = "";
+      timerResult.innerHTML = "⚔️ 瞬間交鋒中...";
+      timerResult.style.color = "#ccc";
+
+      setTimeout(() => {
+        let aiChoices = currentRole === 'ATTACK' ? ['PARRY', 'RETREAT', 'LINE'] : ['DIRECT', 'BEAT', 'FEINT'];
+        let aiChoice = aiChoices[Math.floor(Math.random() * aiChoices.length)]; 
+        let rand = Math.random() * 100; 
+        let resultMsg = "";
+        let whoScored = null;
+
+        if (currentRole === 'ATTACK') {
+          if (playerChoice === 'DIRECT') {
+            if (aiChoice === 'RETREAT') {
+              if(rand < 70) { resultMsg = "🎯 極速直劈命中！進攻得分！"; whoScored = 'PLAYER'; }
+              else { resultMsg = "❌ 揮空了！攻擊權轉換"; }
+            } else { resultMsg = "💀 被撥擋還擊！對手得分！"; whoScored = 'AI'; }
+          }
+          else if (playerChoice === 'BEAT') {
+            if (aiChoice === 'PARRY' || aiChoice === 'LINE') {
+              if(rand < 80) { resultMsg = "🎯 大力敲開防禦！破防得分！"; whoScored = 'PLAYER'; }
+              else { resultMsg = "💀 敲劍失誤露破綻！對手得分！"; whoScored = 'AI'; }
+            } else { resultMsg = "❌ 敲空失衡！攻擊權轉換"; }
+          }
+          else if (playerChoice === 'FEINT') {
+            if (aiChoice === 'PARRY') { resultMsg = "🎯 完美騙出撥擋！騙招得分！"; whoScored = 'PLAYER'; }
+            else { resultMsg = "💀 被直接迎擊刺穿！對手得分！"; whoScored = 'AI'; }
+          }
+        } else {
+          if (playerChoice === 'PARRY') {
+            if (aiChoice === 'DIRECT') { resultMsg = "🎯 完美撥擋還擊！你得分！"; whoScored = 'PLAYER'; }
+            else { resultMsg = "💀 被騙過！對手得分！"; whoScored = 'AI'; }
+          }
+          else if (playerChoice === 'RETREAT') {
+            resultMsg = "🔄 漂亮閃避！你奪回了攻擊權！"; 
+          }
+          else if (playerChoice === 'LINE') {
+            if (aiChoice === 'DIRECT') { resultMsg = "🎯 對手撞上擊劍線！你得分！"; whoScored = 'PLAYER'; }
+            else { resultMsg = "💀 武器被挑飛！對手得分！"; whoScored = 'AI'; }
+          }
+        }
+
+        // 顯示結果
+        timerResult.innerHTML = resultMsg;
+        if (whoScored === 'PLAYER') {
+          timerResult.style.color = "var(--gold)";
+          triggerShake();
+          sfx.score(); // 玩家得分音效
+          addScore('PLAYER');
+        } else if (whoScored === 'AI') {
+          timerResult.style.color = "#ff5555";
+          triggerShake();
+          sfx.clash(); // 對手得分音效
+          addScore('AI');
+        } else {
+          timerResult.style.color = "#ccc"; 
+          sfx.clash(); // 平手音效
+          setTimeout(() => { resetRound(); }, 2500);
+        }
+      }, 1200);
+    }
+
+    function addScore(winner) {
+      if (winner === 'PLAYER') pScore++; else aScore++;
+      document.getElementById('score-player').innerText = pScore;
+      document.getElementById('score-ai').innerText = aScore;
+
+      if (pScore >= 5 || aScore >= 5) {
+        isGameOver = true;
+        logText.innerHTML = "比賽結束！";
+        timerResult.innerHTML = pScore >= 5 ? "🏆 你拿下了全中運總冠軍！" : "💀 敗北... 衛冕軍保住寶座。";
+        timerResult.style.color = pScore >= 5 ? "var(--gold)" : "#ff5555";
+        btn.innerHTML = "再來一局";
+        btn.style.display = 'flex';
+        isProcessing = false;
+      } else {
+        setTimeout(() => { resetRound(); }, 2500); 
+      }
+    }
+
+    function resetRound() {
+      if (isGameOver) return;
+      isProcessing = false;
+      btn.style.display = 'flex';
+      btn.innerHTML = "En Garde<br><span style='font-size: 14px; color:#888;'>(準備)</span>";
+      timerResult.innerHTML = "";
+      logText.innerHTML = "雙方回到起跑線...<br>深呼吸，重新爭奪 The Box！";
+    }
+  </script>
+</body>
+</html>
