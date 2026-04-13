@@ -2,413 +2,480 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>龍門擊劍：決戰全中運</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>龍門擊劍：行動觸控版 (純淨讀秒)</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --dragon-red: #e63946;
-      --champion-blue: #457b9d;
-      --gold: #ffb703;
-      --dark-bg: #0a0a0c;
-      --card-bg: #1a1b26;
-    }
-
-    body {
-      margin: 0; padding: 0; background-color: #000;
-      color: #fff; font-family: 'Noto Sans TC', sans-serif;
-      display: flex; flex-direction: column; align-items: center;
-      height: 100vh; overflow: hidden;
-      user-select: none; /* 防止連點時選取文字 */
-    }
-
-    /* 螢幕震動特效 */
-    @keyframes shake {
-      0% { transform: translate(2px, 1px) rotate(0deg); }
-      10% { transform: translate(-1px, -2px) rotate(-1deg); }
-      20% { transform: translate(-3px, 0px) rotate(1deg); }
-      30% { transform: translate(3px, 2px) rotate(0deg); }
-      40% { transform: translate(1px, -1px) rotate(1deg); }
-      50% { transform: translate(-1px, 2px) rotate(-1deg); }
-      60% { transform: translate(-3px, 1px) rotate(0deg); }
-      70% { transform: translate(3px, 1px) rotate(-1deg); }
-      80% { transform: translate(-1px, -1px) rotate(1deg); }
-      90% { transform: translate(1px, 2px) rotate(0deg); }
-      100% { transform: translate(0px, 0px) rotate(0deg); }
-    }
-    .shake-effect {
-      animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
-    }
-
-    #game-container {
-      width: 100%; max-width: 500px; height: 100vh;
-      display: flex; flex-direction: column;
-      background: radial-gradient(circle at center, #1a1a1d 0%, #000 100%);
-      box-shadow: 0 0 30px rgba(0,0,0,0.9);
-    }
-
-    /* 計分板 (LED 風格) */
-    #scoreboard {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 15px 20px; background-color: #050505; 
-      border-bottom: 3px solid #222; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-    }
-    .player-box { text-align: center; width: 35%; }
-    .player-box h2 { margin: 0; font-size: 14px; color: #888; letter-spacing: 1px;}
-    .score { 
-      font-family: 'Orbitron', sans-serif; font-size: 48px; font-weight: 900; 
-      margin-top: 5px; text-shadow: 0 0 15px currentColor; 
-    }
-    #longmen-box h2 { color: var(--dragon-red); }
-    #champion-box h2 { color: var(--champion-blue); }
-
-    /* 播報區 */
-    #log-box {
-      flex-grow: 1; padding: 20px; text-align: center;
-      font-size: 18px; line-height: 1.6; display: flex;
-      flex-direction: column; justify-content: center; align-items: center;
-    }
-    .highlight { 
-      color: var(--gold); font-size: 24px; font-weight: 900; 
-      margin: 15px 0; font-style: italic; text-shadow: 2px 2px 4px #000;
-    }
-
-    /* 操作區 */
-    #control-panel {
-      padding: 20px; background-color: #0f0f11; min-height: 250px;
-      display: flex; flex-direction: column; justify-content: center;
-      border-top: 1px solid #333;
-    }
-
-    /* 讀秒按鈕 */
-    #action-btn {
-      width: 180px; height: 180px; border-radius: 50%;
-      background: linear-gradient(145deg, #2a2a2a, #0a0a0a);
-      border: 4px solid #444; color: #fff; font-size: 24px; font-weight: 900;
-      cursor: pointer; outline: none; transition: transform 0.1s;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5); 
-      margin: 0 auto; letter-spacing: 2px; text-transform: uppercase;
-    }
-    #action-btn:active { transform: scale(0.92); }
+    :root { --dragon-red: #e63946; --champion-blue: #457b9d; --gold: #ffb703; --dark-bg: #0a0a0c; }
     
-    .running {
-      border-color: var(--dragon-red) !important; color: var(--dragon-red) !important;
-      animation: heartbeat 0.8s infinite alternate !important;
-    }
-    @keyframes heartbeat {
-      0% { box-shadow: 0 0 10px var(--dragon-red), inset 0 0 10px var(--dragon-red); transform: scale(1); }
-      100% { box-shadow: 0 0 40px var(--dragon-red), inset 0 0 30px var(--dragon-red); transform: scale(1.05); }
+    body {
+      margin: 0; padding: 0; background-color: #000; color: #fff;
+      font-family: 'Noto Sans TC', sans-serif; height: 100vh; overflow: hidden;
+      touch-action: none; -webkit-user-select: none; user-select: none;
+      -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
     }
 
-    /* 戰術卡牌 */
-    #tactics-container { display: none; flex-direction: column; gap: 15px; }
-    .tactics-title { text-align: center; margin-bottom: 5px; font-weight: 900; font-size: 20px; letter-spacing: 3px;}
-    .cards-row { display: flex; gap: 10px; }
-    .card-btn {
-      flex: 1; background: linear-gradient(180deg, #2b2d42 0%, #1a1b26 100%);
-      border: 2px solid #444; color: white; padding: 18px 5px; 
-      border-radius: 10px; font-size: 16px; font-weight: bold; 
-      cursor: pointer; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    #portrait-warning {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #000; z-index: 9999; flex-direction: column; 
+      justify-content: center; align-items: center; text-align: center; font-size: 24px;
     }
-    .card-btn:hover { 
-      transform: translateY(-8px) scale(1.05); border-color: var(--gold); 
-      box-shadow: 0 10px 20px rgba(255, 183, 3, 0.3);
+    @media screen and (orientation: portrait) {
+      #portrait-warning { display: flex; }
+      #app-container { display: none !important; }
     }
+
+    @keyframes shake {
+      0%, 100% { transform: translate(0,0); }
+      25% { transform: translate(-4px, 4px); }
+      50% { transform: translate(4px, -4px); }
+      75% { transform: translate(-4px, -4px); }
+    }
+    .shake-effect { animation: shake 0.2s ease-in-out both; }
+
+    #app-container { width: 100%; height: 100%; position: relative; }
+
+    /* 首頁 */
+    #start-menu {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(circle at center, #1a1a1d 0%, #000 100%);
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      z-index: 100;
+    }
+    .title-main { font-size: 56px; font-weight: 900; margin: 0; color: #fff; text-shadow: 0 0 20px var(--dragon-red); letter-spacing: 5px; text-align: center; }
+    .title-sub { font-size: 18px; color: #888; margin-bottom: 40px; letter-spacing: 2px; text-align: center;}
+    
+    .mode-btn {
+      background: #111; color: #fff; border: 2px solid #444; padding: 15px 40px;
+      font-size: 20px; font-weight: bold; border-radius: 30px; margin: 10px;
+      cursor: pointer; transition: 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    }
+    .mode-btn:active { transform: scale(0.95); }
+    #btn-single { border-color: var(--dragon-red); }
+    #btn-pvp { border-color: var(--champion-blue); }
+
+    /* 戰鬥場景 */
+    #game-wrapper {
+      display: none; flex-direction: column; width: 100%; height: 100%;
+      background: radial-gradient(circle at center, #111 0%, #000 100%);
+    }
+
+    #top-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      height: 12%; background: #050505; border-bottom: 2px solid #222; z-index: 10; padding: 0 5%;
+    }
+    .score-block { display: flex; align-items: baseline; gap: 10px; }
+    .score-name { font-size: 14px; color: #888; font-weight: bold; }
+    .score-num { font-family: 'Orbitron'; font-size: 32px; font-weight: 900; }
+
+    #arena { display: flex; flex-grow: 1; position: relative; }
+    .side { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 10px; transition: 0.3s; position: relative; }
+    #p1-side { border-right: 2px dashed #333; background: linear-gradient(90deg, rgba(230,57,70,0.05) 0%, transparent 100%); }
+    #p2-side { background: linear-gradient(270deg, rgba(69,123,157,0.05) 0%, transparent 100%); }
+
+    #center-console {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 45%; text-align: center; z-index: 20; pointer-events: none;
+    }
+    #log-text { font-size: 16px; background: rgba(0,0,0,0.85); padding: 10px; border-radius: 8px; border: 1px solid #444; }
+    .highlight { color: var(--gold); font-size: 22px; font-weight: 900; margin-top: 5px; text-shadow: 0 0 10px var(--gold); }
+
+    #sys-controls { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 30; pointer-events: auto; }
+    .sys-btn { padding: 12px 25px; font-size: 18px; font-weight: 900; cursor: pointer; border-radius: 30px; border: none; background: #333; color: white; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+    .sys-btn:active { transform: scale(0.9); }
+    #start-round-btn { background: var(--gold); color: black; }
+
+    /* 手機大拇指讀秒按鈕 */
+    .action-btn {
+      width: 130px; height: 130px; border-radius: 50%; border: 4px solid #444;
+      background: linear-gradient(145deg, #2a2a2a, #111); color: #fff;
+      font-size: 24px; font-weight: 900; display: none;
+      justify-content: center; align-items: center; box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+      pointer-events: auto;
+    }
+    .action-btn:active { transform: scale(0.92); background: #333; }
+    
+    /* 戰術面板 */
+    .tactics-panel { display: none; flex-direction: column; gap: 15px; width: 85%; max-width: 200px; pointer-events: auto; }
+    .tactic-btn {
+      padding: 15px; border-radius: 10px; border: 2px solid #555; background: #1a1b26;
+      color: #fff; font-size: 18px; font-weight: bold; text-align: center; cursor: pointer;
+    }
+    .tactic-btn:active { transform: scale(0.95); border-color: var(--gold); }
+    .locked { background: var(--gold) !important; color: #000 !important; pointer-events: none; }
+    
+    #ai-status { color: #888; font-size: 22px; font-weight: bold; display: none; letter-spacing: 2px; }
   </style>
 </head>
 <body>
 
-  <div id="game-container">
-    <div id="scoreboard">
-      <div id="longmen-box" class="player-box">
-        <h2>龍門 (你)</h2>
-        <div class="score" id="score-player" style="color:var(--dragon-red)">0</div>
-      </div>
-      <div style="font-family: 'Orbitron', sans-serif; font-size: 12px; color: #888; font-weight: 700; letter-spacing: 2px;">RACE TO 5</div>
-      <div id="champion-box" class="player-box">
-        <h2>雷霆 (AI)</h2>
-        <div class="score" id="score-ai" style="color:var(--champion-blue)">0</div>
-      </div>
+  <div id="portrait-warning">
+    <div style="font-size:40px;">🔄</div>
+    <div style="margin-top:10px;">請將手機轉為橫向</div>
+    <div style="font-size: 16px; color:#888; margin-top:10px;">為獲得最佳遊戲體驗</div>
+  </div>
+
+  <div id="app-container">
+    <div id="start-menu">
+      <h1 class="title-main">龍門擊劍</h1>
+      <div class="title-sub">行動觸控純淨版</div>
+      <button class="mode-btn" id="btn-single">👤 單人挑戰 (AI)</button>
+      <button class="mode-btn" id="btn-pvp">👥 雙人對戰 (同機競技)</button>
     </div>
 
-    <div id="log-box">
-      <div id="log-text" style="color: #ccc;">全中運總決賽！<br>按下準備，準備迎接第一劍...</div>
-      <div id="timer-result" class="highlight"></div>
-    </div>
+    <div id="game-wrapper">
+      <div id="top-bar">
+        <div class="score-block">
+          <span class="score-name" style="color:var(--dragon-red)">P1 紅方</span>
+          <span class="score-num" id="score-p1" style="color:var(--dragon-red)">0</span>
+        </div>
+        <div style="font-family: 'Orbitron'; font-size: 12px; color: #666;">RACE TO 5</div>
+        <div class="score-block">
+          <span class="score-num" id="score-p2" style="color:var(--champion-blue)">0</span>
+          <span class="score-name" id="name-p2" style="color:var(--champion-blue)">P2 藍方</span>
+        </div>
+      </div>
 
-    <div id="control-panel">
-      <button id="action-btn">En Garde<br><span style="font-size: 14px; font-weight: 500; color:#888;">(準備)</span></button>
+      <div id="arena">
+        <div id="center-console">
+          <div id="log-text" style="display:none;"></div>
+          <div id="result-msg" class="highlight"></div>
+        </div>
 
-      <div id="tactics-container">
-        <div id="tactics-title" class="tactics-title">選擇你的戰術</div>
-        <div class="cards-row" id="cards-row"></div>
+        <div id="sys-controls">
+          <button class="sys-btn" id="back-menu-btn">返回首頁</button>
+          <button class="sys-btn" id="start-round-btn">奪取攻擊權</button>
+        </div>
+
+        <div class="side" id="p1-side">
+          <div class="action-btn" id="p1-action-btn">出劍</div>
+          <div class="tactics-panel" id="p1-tactics">
+            <div style="color:#888; text-align:center; font-size:14px; margin-bottom:5px;">你的戰術</div>
+            <div class="tactic-btn" id="p1-t1">🗡️ 直劈頭</div>
+            <div class="tactic-btn" id="p1-t2">💥 敲劍</div>
+            <div class="tactic-btn" id="p1-t3">🎭 假動作</div>
+          </div>
+        </div>
+
+        <div class="side" id="p2-side">
+          <div class="action-btn" id="p2-action-btn">出劍</div>
+          <div id="ai-status">AI 就緒</div>
+          <div class="tactics-panel" id="p2-tactics">
+            <div style="color:#888; text-align:center; font-size:14px; margin-bottom:5px;">對手戰術</div>
+            <div class="tactic-btn" id="p2-t1">🛡️ 撥擋</div>
+            <div class="tactic-btn" id="p2-t2">💨 滑步</div>
+            <div class="tactic-btn" id="p2-t3">⚔️ 擊劍線</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    // ==========================================
-    // 🔊 街機風音效合成器 (Web Audio API)
-    // ==========================================
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx;
-
-    function initAudio() {
-      if (!audioCtx) {
-        audioCtx = new AudioContext();
-      }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-    }
+    function initAudio() { if (!audioCtx) audioCtx = new AudioContext(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
 
     const sfx = {
-      heartbeat: () => {
-        if(!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(45, audioCtx.currentTime); 
-        osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-        gain.gain.setValueAtTime(1, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-      },
       score: () => {
-        if(!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-        osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.1); 
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        if(!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'square';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.1); 
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
         osc.start(); osc.stop(audioCtx.currentTime + 0.3);
       },
       clash: () => {
-        if(!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
-        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        if(!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'triangle';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
         osc.start(); osc.stop(audioCtx.currentTime + 0.2);
       }
     };
 
-    // ==========================================
-    // 遊戲邏輯變數
-    // ==========================================
-    let pScore = 0, aScore = 0;
-    let startTime = 0;
-    let isRunning = false, isGameOver = false, isProcessing = false;
-    let currentRole = ''; 
-    let heartbeatInterval; // 控制心跳音效的變數
+    let currentMode = 'SINGLE';
+    let gameState = 'WAITING';
+    let p1Score = 0, p2Score = 0;
+    let roundStartTime = 0;
+    let p1Time = null, p2Time = null;
+    let p1Role = '', p2Role = '';
+    let p1Choice = null, p2Choice = null;
+    let aiTimeout = null;
 
-    const gameContainer = document.getElementById('game-container');
-    const btn = document.getElementById('action-btn');
-    const tacticsPanel = document.getElementById('tactics-container');
-    const cardsRow = document.getElementById('cards-row');
-    const tacticsTitle = document.getElementById('tactics-title');
+    const gc = document.getElementById('game-wrapper');
+    const startMenu = document.getElementById('start-menu');
+    const nameP2 = document.getElementById('name-p2');
     const logText = document.getElementById('log-text');
-    const timerResult = document.getElementById('timer-result');
+    const resultMsg = document.getElementById('result-msg');
+    
+    function triggerShake() { gc.classList.remove('shake-effect'); void gc.offsetWidth; gc.classList.add('shake-effect'); }
+    function clearTimers() { if(aiTimeout) clearTimeout(aiTimeout); }
 
-    // 螢幕震動
-    function triggerShake() {
-      gameContainer.classList.remove('shake-effect');
-      void gameContainer.offsetWidth; 
-      gameContainer.classList.add('shake-effect');
-    }
-
-    // 第一階段：讀秒
-    btn.addEventListener('click', () => {
-      initAudio(); // 初始化音效引擎 (解決瀏覽器限制)
-
-      if (isGameOver || isProcessing) { if(isGameOver) location.reload(); return; }
-
-      if (!isRunning) {
-        // 開始計時
-        startTime = performance.now();
-        isRunning = true;
-        btn.innerHTML = "Allez!<br><span style='font-size: 14px; color:#fff;'>(出劍)</span>";
-        btn.classList.add('running');
-        logText.innerHTML = "專注呼吸... 抓準 <strong style='color:#fff'>5.00 秒</strong> 的瞬間！";
-        timerResult.innerHTML = "";
-        
-        // 啟動心跳音效
-        sfx.heartbeat();
-        heartbeatInterval = setInterval(sfx.heartbeat, 800); 
-
-      } else {
-        // 停止計時
-        let seconds = (performance.now() - startTime) / 1000;
-        isRunning = false;
-        btn.classList.remove('running');
-        
-        // 停止心跳音效
-        clearInterval(heartbeatInterval);
-
-        evaluateTiming(seconds);
-      }
+    document.getElementById('btn-single').addEventListener('pointerdown', (e) => {
+      e.preventDefault(); initAudio(); currentMode = 'SINGLE';
+      startMenu.style.display = 'none'; gc.style.display = 'flex';
+      nameP2.innerText = "AI 衛冕軍"; resetScores();
     });
 
-    function evaluateTiming(sec) {
-      let timeStr = "<span style='font-family: Orbitron; font-size:22px; color:#fff'>" + sec.toFixed(3) + "s</span>";
-      btn.style.display = 'none'; 
+    document.getElementById('btn-pvp').addEventListener('pointerdown', (e) => {
+      e.preventDefault(); initAudio(); currentMode = 'PVP';
+      startMenu.style.display = 'none'; gc.style.display = 'flex';
+      nameP2.innerText = "P2 藍方"; resetScores();
+    });
 
-      if (sec >= 4.85 && sec <= 5.15) {
-        logText.innerHTML = `反應時間: ${timeStr}<br>爆發力無懈可擊！你化作閃電直接刺中對手！`;
-        timerResult.innerHTML = "🏆 完美啟動！直接得分！";
-        timerResult.style.color = "var(--gold)";
-        triggerShake(); 
-        sfx.score(); // 播放得分音
-        addScore('PLAYER');
-      } 
-      else if (sec >= 4.50 && sec <= 5.49) {
-        logText.innerHTML = `反應時間: ${timeStr}<br>步伐節奏優勢，成功佔據賽道中心。`;
-        timerResult.innerHTML = "⚔️ 奪得攻擊權！";
-        timerResult.style.color = "var(--dragon-red)";
-        showTactics('ATTACK');
-      } 
-      else if ((sec >= 4.00 && sec < 4.50) || (sec > 5.49 && sec <= 5.99)) {
-        logText.innerHTML = `反應時間: ${timeStr}<br>對手搶佔先機，你被迫後退防守。`;
-        timerResult.innerHTML = "🛡️ 失去攻擊權！";
-        timerResult.style.color = "var(--champion-blue)";
-        showTactics('DEFEND');
-      } 
-      else {
-        logText.innerHTML = `反應時間: ${timeStr}<br>${sec < 4 ? '太緊張了，提早搶拍犯規！' : '僵在原地淪為活靶！'}`;
-        timerResult.innerHTML = "❌ 嚴重失誤！對手得分！";
-        timerResult.style.color = "#ff5555";
-        triggerShake(); 
-        sfx.clash(); // 播放失誤音效
-        addScore('AI');
-      }
+    document.getElementById('back-menu-btn').addEventListener('pointerdown', (e) => {
+      e.preventDefault(); clearTimers(); gameState = 'WAITING';
+      gc.style.display = 'none'; startMenu.style.display = 'flex';
+    });
+
+    document.getElementById('start-round-btn').addEventListener('pointerdown', (e) => {
+      e.preventDefault(); startRound();
+    });
+
+    document.getElementById('p1-action-btn').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (gameState === 'TIMING' && p1Time === null) recordTime('P1');
+    });
+
+    document.getElementById('p2-action-btn').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (currentMode === 'PVP' && gameState === 'TIMING' && p2Time === null) recordTime('P2');
+    });
+
+    function resetScores() {
+      p1Score = 0; p2Score = 0;
+      document.getElementById('score-p1').innerText = "0";
+      document.getElementById('score-p2').innerText = "0";
+      resetRoundUI();
     }
 
-    // 第二階段：戰術面板
-    function showTactics(role) {
-      currentRole = role;
-      tacticsPanel.style.display = 'flex';
+    function resetRoundUI() {
+      if (gameState === 'GAMEOVER') return;
+      gameState = 'WAITING';
+      document.getElementById('p1-tactics').style.display = 'none';
+      document.getElementById('p2-tactics').style.display = 'none';
+      document.getElementById('ai-status').style.display = 'none';
+      document.getElementById('p1-action-btn').style.display = 'none';
+      document.getElementById('p2-action-btn').style.display = 'none';
       
-      if (role === 'ATTACK') {
-        tacticsTitle.innerText = "【 進 攻 方 】";
-        tacticsTitle.style.color = "var(--dragon-red)";
-        cardsRow.innerHTML = `
-          <button class="card-btn" onclick="resolveTactics('DIRECT')">🗡️ 直劈頭</button>
-          <button class="card-btn" onclick="resolveTactics('BEAT')">💥 敲劍</button>
-          <button class="card-btn" onclick="resolveTactics('FEINT')">🎭 假動作</button>
-        `;
+      logText.style.display = 'none'; resultMsg.innerHTML = "";
+      document.getElementById('start-round-btn').innerText = "奪取攻擊權";
+      document.getElementById('start-round-btn').style.display = 'block';
+      document.getElementById('back-menu-btn').style.display = 'block';
+    }
+
+    function startRound() {
+      initAudio(); clearTimers();
+      gameState = 'TIMING';
+      p1Time = null; p2Time = null; p1Choice = null; p2Choice = null;
+      
+      document.getElementById('start-round-btn').style.display = 'none';
+      document.getElementById('back-menu-btn').style.display = 'none';
+      
+      document.getElementById('p1-tactics').style.display = 'none';
+      document.getElementById('p2-tactics').style.display = 'none';
+      
+      let btn1 = document.getElementById('p1-action-btn');
+      btn1.style.display = 'flex'; btn1.style.background = ""; btn1.innerText = "出劍";
+      
+      if (currentMode === 'PVP') {
+        let btn2 = document.getElementById('p2-action-btn');
+        btn2.style.display = 'flex'; btn2.style.background = ""; btn2.innerText = "出劍";
+        document.getElementById('ai-status').style.display = 'none';
       } else {
-        tacticsTitle.innerText = "【 防 守 方 】";
-        tacticsTitle.style.color = "var(--champion-blue)";
-        cardsRow.innerHTML = `
-          <button class="card-btn" onclick="resolveTactics('PARRY')">🛡️ 第三撥擋</button>
-          <button class="card-btn" onclick="resolveTactics('RETREAT')">💨 極限滑步</button>
-          <button class="card-btn" onclick="resolveTactics('LINE')">⚔️ 擊劍線</button>
-        `;
+        document.getElementById('p2-action-btn').style.display = 'none';
+        document.getElementById('ai-status').style.display = 'block';
+        document.getElementById('ai-status').innerText = "AI 待機中...";
+      }
+      
+      logText.style.display = 'block'; resultMsg.innerHTML = "";
+      logText.innerHTML = "En Garde... <strong style='color:var(--gold)'>Allez!</strong><br><span style='font-size:14px; color:#888;'>（心中默數 5 秒！）</span>";
+      
+      roundStartTime = performance.now();
+
+      if (currentMode === 'SINGLE') {
+        let aiDelay = 4.5 + Math.random() * 1.0; 
+        aiTimeout = setTimeout(() => {
+          if (gameState === 'TIMING' && p2Time === null) recordTime('AI');
+        }, aiDelay * 1000);
+      }
+
+      setTimeout(() => { if (gameState === 'TIMING') checkTimingPhase(true); }, 7000);
+    }
+
+    function recordTime(player) {
+      if (gameState !== 'TIMING') return;
+      let currentTime = (performance.now() - roundStartTime) / 1000;
+
+      if (player === 'P1') {
+        p1Time = currentTime;
+        document.getElementById('p1-action-btn').style.background = "var(--dragon-red)";
+        document.getElementById('p1-action-btn').innerText = "已出劍";
+      } else { 
+        p2Time = currentTime;
+        if(currentMode === 'PVP') {
+          document.getElementById('p2-action-btn').style.background = "var(--champion-blue)";
+          document.getElementById('p2-action-btn').innerText = "已出劍";
+        } else {
+          document.getElementById('ai-status').innerText = "AI 已出劍";
+        }
+      }
+
+      if (currentTime < 4.0) {
+        gameState = 'RESOLVING'; clearTimers();
+        document.getElementById('p1-action-btn').style.display = 'none';
+        document.getElementById('p2-action-btn').style.display = 'none';
+        
+        let p2Label = currentMode === 'SINGLE' ? 'AI' : 'P2';
+        let timeStr = `<span style='font-family:Orbitron;font-size:14px'>犯規: ${currentTime.toFixed(3)}s</span><br>`;
+        
+        if (player === 'P1') {
+          logText.innerHTML = timeStr + "太緊張了，P1 搶拍！"; resultMsg.innerHTML = `🏆 ${p2Label} 直接得分！`;
+          triggerShake(); sfx.score(); addScore('P2');
+        } else {
+          logText.innerHTML = timeStr + `太緊張了，${p2Label} 搶拍！`; resultMsg.innerHTML = "🏆 P1 直接得分！";
+          triggerShake(); sfx.score(); addScore('P1');
+        }
+        return;
+      }
+
+      if (p1Time !== null && p2Time !== null) checkTimingPhase(false);
+    }
+
+    function checkTimingPhase(forceTimeout) {
+      if (!forceTimeout && (p1Time === null || p2Time === null)) return;
+      
+      gameState = 'RESOLVING'; clearTimers();
+      document.getElementById('p1-action-btn').style.display = 'none';
+      document.getElementById('p2-action-btn').style.display = 'none';
+
+      if (p1Time === null) p1Time = 9.99; if (p2Time === null) p2Time = 9.99;
+
+      let p2Label = currentMode === 'SINGLE' ? 'AI' : 'P2';
+      let timeMsg = `<span style='font-family:Orbitron;font-size:14px'>P1: ${p1Time.toFixed(3)}s | ${p2Label}: ${p2Time.toFixed(3)}s</span><br>`;
+      let p1Late = p1Time > 6.0, p2Late = p2Time > 6.0;
+
+      if (p1Late && p2Late) {
+        logText.innerHTML = timeMsg + "雙方反應皆過慢！"; resultMsg.innerHTML = "❌ 平手重置";
+        sfx.clash(); setTimeout(resetRoundUI, 2500);
+      } else if (p1Late && !p2Late) {
+        logText.innerHTML = timeMsg + "P1 淪為活靶！"; resultMsg.innerHTML = `🏆 ${p2Label} 直接得分！`;
+        triggerShake(); sfx.score(); addScore('P2');
+      } else if (!p1Late && p2Late) {
+        logText.innerHTML = timeMsg + `${p2Label} 淪為活靶！`; resultMsg.innerHTML = "🏆 P1 直接得分！";
+        triggerShake(); sfx.score(); addScore('P1');
+      } else {
+        let p1Diff = Math.abs(p1Time - 5.0), p2Diff = Math.abs(p2Time - 5.0);
+        if (p1Diff < p2Diff) { 
+          setupTactics('P1'); logText.innerHTML = timeMsg + "<span style='color:var(--dragon-red)'>P1 取得攻擊權！</span>"; 
+        } else if (p2Diff < p1Diff) { 
+          setupTactics('P2'); logText.innerHTML = timeMsg + `<span style='color:var(--champion-blue)'>${p2Label} 取得攻擊權！</span>`; 
+        } else { 
+          logText.innerHTML = timeMsg + "雙方同時擊中！"; resultMsg.innerHTML = "❌ 平手重置"; sfx.clash(); setTimeout(resetRoundUI, 2500); 
+        }
       }
     }
 
-    // 結算戰術
-    function resolveTactics(playerChoice) {
-      isProcessing = true;
-      tacticsPanel.style.display = 'none'; 
+    function setupTactics(attacker) {
+      gameState = 'TACTICS';
+      document.getElementById('p1-tactics').style.display = 'flex';
       
-      // 子彈時間
-      logText.innerHTML = "";
-      timerResult.innerHTML = "⚔️ 瞬間交鋒中...";
-      timerResult.style.color = "#ccc";
+      for(let i=1; i<=3; i++) {
+        document.getElementById(`p1-t${i}`).classList.remove('locked');
+        document.getElementById(`p1-t${i}`).innerText = "";
+        document.getElementById(`p2-t${i}`).classList.remove('locked');
+        document.getElementById(`p2-t${i}`).innerText = "";
+      }
 
+      if (currentMode === 'PVP') {
+        document.getElementById('p2-tactics').style.display = 'flex';
+      } else {
+        document.getElementById('p2-tactics').style.display = 'none';
+        document.getElementById('ai-status').style.display = 'block';
+        document.getElementById('ai-status').innerText = "AI 思考中...";
+      }
+
+      if (attacker === 'P1') {
+        p1Role = 'ATTACK'; p2Role = 'DEFEND';
+        document.getElementById('p1-t1').innerText = "🗡️ 直劈頭"; document.getElementById('p1-t2').innerText = "💥 敲劍"; document.getElementById('p1-t3').innerText = "🎭 假動作";
+        document.getElementById('p2-t1').innerText = "🛡️ 撥擋"; document.getElementById('p2-t2').innerText = "💨 滑步"; document.getElementById('p2-t3').innerText = "⚔️ 擊劍線";
+      } else {
+        p1Role = 'DEFEND'; p2Role = 'ATTACK';
+        document.getElementById('p1-t1').innerText = "🛡️ 撥擋"; document.getElementById('p1-t2').innerText = "💨 滑步"; document.getElementById('p1-t3').innerText = "⚔️ 擊劍線";
+        document.getElementById('p2-t1').innerText = "🗡️ 直劈頭"; document.getElementById('p2-t2').innerText = "💥 敲劍"; document.getElementById('p2-t3').innerText = "🎭 假動作";
+      }
+    }
+
+    function bindTactic(btnId, player, moveStr) {
+      document.getElementById(btnId).addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        if (gameState !== 'TACTICS') return;
+        let el = e.target;
+        if (player === 'P1' && !p1Choice) {
+          p1Choice = moveStr; el.innerText = "✅ 已鎖定"; el.classList.add('locked');
+          if (currentMode === 'SINGLE') { 
+            p2Choice = ['MOVE1', 'MOVE2', 'MOVE3'][Math.floor(Math.random()*3)]; 
+            document.getElementById('ai-status').innerText = "AI 已鎖定"; 
+          }
+        } else if (player === 'P2' && !p2Choice && currentMode === 'PVP') {
+          p2Choice = moveStr; el.innerText = "✅ 已鎖定"; el.classList.add('locked');
+        }
+        if (p1Choice && p2Choice) resolveClashResult();
+      });
+    }
+
+    bindTactic('p1-t1', 'P1', 'MOVE1'); bindTactic('p1-t2', 'P1', 'MOVE2'); bindTactic('p1-t3', 'P1', 'MOVE3');
+    bindTactic('p2-t1', 'P2', 'MOVE1'); bindTactic('p2-t2', 'P2', 'MOVE2'); bindTactic('p2-t3', 'P2', 'MOVE3');
+
+    function resolveClashResult() {
+      gameState = 'RESOLVING'; logText.innerHTML = "⚔️ 瞬間交鋒中...";
       setTimeout(() => {
-        let aiChoices = currentRole === 'ATTACK' ? ['PARRY', 'RETREAT', 'LINE'] : ['DIRECT', 'BEAT', 'FEINT'];
-        let aiChoice = aiChoices[Math.floor(Math.random() * aiChoices.length)]; 
-        let rand = Math.random() * 100; 
-        let resultMsg = "";
-        let whoScored = null;
+        let attMove = p1Role === 'ATTACK' ? p1Choice : p2Choice;
+        let defMove = p1Role === 'DEFEND' ? p1Choice : p2Choice;
+        
+        let result = 'TIE';
+        if (attMove === 'MOVE1') result = defMove === 'MOVE2' ? 'ATT_WIN' : 'DEF_WIN';
+        if (attMove === 'MOVE2') result = (defMove === 'MOVE1' || defMove === 'MOVE3') ? 'ATT_WIN' : 'TIE';
+        if (attMove === 'MOVE3') result = defMove === 'MOVE1' ? 'ATT_WIN' : 'DEF_WIN';
+        
+        let p1Name = getMoveName(p1Role, p1Choice); let p2Name = getMoveName(p2Role, p2Choice);
+        let p2Label = currentMode === 'SINGLE' ? 'AI' : 'P2';
+        
+        logText.innerHTML = `P1 [${p1Name}] VS ${p2Label} [${p2Name}]`;
 
-        if (currentRole === 'ATTACK') {
-          if (playerChoice === 'DIRECT') {
-            if (aiChoice === 'RETREAT') {
-              if(rand < 70) { resultMsg = "🎯 極速直劈命中！進攻得分！"; whoScored = 'PLAYER'; }
-              else { resultMsg = "❌ 揮空了！攻擊權轉換"; }
-            } else { resultMsg = "💀 被撥擋還擊！對手得分！"; whoScored = 'AI'; }
-          }
-          else if (playerChoice === 'BEAT') {
-            if (aiChoice === 'PARRY' || aiChoice === 'LINE') {
-              if(rand < 80) { resultMsg = "🎯 大力敲開防禦！破防得分！"; whoScored = 'PLAYER'; }
-              else { resultMsg = "💀 敲劍失誤露破綻！對手得分！"; whoScored = 'AI'; }
-            } else { resultMsg = "❌ 敲空失衡！攻擊權轉換"; }
-          }
-          else if (playerChoice === 'FEINT') {
-            if (aiChoice === 'PARRY') { resultMsg = "🎯 完美騙出撥擋！騙招得分！"; whoScored = 'PLAYER'; }
-            else { resultMsg = "💀 被直接迎擊刺穿！對手得分！"; whoScored = 'AI'; }
-          }
+        if (result === 'ATT_WIN') {
+          let winner = p1Role === 'ATTACK' ? 'P1' : 'P2';
+          resultMsg.innerHTML = `🎯 進攻破防！${winner === 'P1' ? 'P1' : p2Label} 得分！`;
+          triggerShake(); sfx.score(); addScore(winner);
+        } else if (result === 'DEF_WIN') {
+          let winner = p1Role === 'DEFEND' ? 'P1' : 'P2';
+          resultMsg.innerHTML = `💀 防守反擊！${winner === 'P1' ? 'P1' : p2Label} 得分！`;
+          triggerShake(); sfx.score(); addScore(winner);
         } else {
-          if (playerChoice === 'PARRY') {
-            if (aiChoice === 'DIRECT') { resultMsg = "🎯 完美撥擋還擊！你得分！"; whoScored = 'PLAYER'; }
-            else { resultMsg = "💀 被騙過！對手得分！"; whoScored = 'AI'; }
-          }
-          else if (playerChoice === 'RETREAT') {
-            resultMsg = "🔄 漂亮閃避！你奪回了攻擊權！"; 
-          }
-          else if (playerChoice === 'LINE') {
-            if (aiChoice === 'DIRECT') { resultMsg = "🎯 對手撞上擊劍線！你得分！"; whoScored = 'PLAYER'; }
-            else { resultMsg = "💀 武器被挑飛！對手得分！"; whoScored = 'AI'; }
-          }
+          resultMsg.innerHTML = "🔄 揮空僵持！攻擊權轉換"; sfx.clash(); setTimeout(resetRoundUI, 2500);
         }
+      }, 1000);
+    }
 
-        // 顯示結果
-        timerResult.innerHTML = resultMsg;
-        if (whoScored === 'PLAYER') {
-          timerResult.style.color = "var(--gold)";
-          triggerShake();
-          sfx.score(); // 玩家得分音效
-          addScore('PLAYER');
-        } else if (whoScored === 'AI') {
-          timerResult.style.color = "#ff5555";
-          triggerShake();
-          sfx.clash(); // 對手得分音效
-          addScore('AI');
-        } else {
-          timerResult.style.color = "#ccc"; 
-          sfx.clash(); // 平手音效
-          setTimeout(() => { resetRound(); }, 2500);
-        }
-      }, 1200);
+    function getMoveName(role, move) {
+      if(role === 'ATTACK') return move==='MOVE1'?'🗡️直劈':(move==='MOVE2'?'💥敲劍':'🎭假招');
+      return move==='MOVE1'?'🛡️撥擋':(move==='MOVE2'?'💨滑步':'⚔️劍線');
     }
 
     function addScore(winner) {
-      if (winner === 'PLAYER') pScore++; else aScore++;
-      document.getElementById('score-player').innerText = pScore;
-      document.getElementById('score-ai').innerText = aScore;
-
-      if (pScore >= 5 || aScore >= 5) {
-        isGameOver = true;
-        logText.innerHTML = "比賽結束！";
-        timerResult.innerHTML = pScore >= 5 ? "🏆 你拿下了全中運總冠軍！" : "💀 敗北... 衛冕軍保住寶座。";
-        timerResult.style.color = pScore >= 5 ? "var(--gold)" : "#ff5555";
-        btn.innerHTML = "再來一局";
-        btn.style.display = 'flex';
-        isProcessing = false;
-      } else {
-        setTimeout(() => { resetRound(); }, 2500); 
-      }
-    }
-
-    function resetRound() {
-      if (isGameOver) return;
-      isProcessing = false;
-      btn.style.display = 'flex';
-      btn.innerHTML = "En Garde<br><span style='font-size: 14px; color:#888;'>(準備)</span>";
-      timerResult.innerHTML = "";
-      logText.innerHTML = "雙方回到起跑線...<br>深呼吸，重新爭奪 The Box！";
+      if (winner === 'P1') p1Score++; else p2Score++;
+      document.getElementById('score-p1').innerText = p1Score;
+      document.getElementById('score-p2').innerText = p2Score;
+      
+      if (p1Score >= 5 || p2Score >= 5) {
+        gameState = 'GAMEOVER';
+        let champion = p1Score >= 5 ? 'P1 (紅方)' : (currentMode === 'SINGLE' ? 'AI 衛冕軍' : 'P2 (藍方)');
+        logText.innerHTML = "比賽結束！"; resultMsg.innerHTML = `🏆 ${champion} 獲勝！`;
+        
+        document.getElementById('start-round-btn').innerText = "再戰一場"; 
+        document.getElementById('start-round-btn').style.display = 'block';
+        document.getElementById('back-menu-btn').style.display = 'block';
+      } else { setTimeout(resetRoundUI, 2500); }
     }
   </script>
 </body>
