@@ -1325,7 +1325,7 @@ const POSE   = { ATTACK: 'attack', DEFEND: 'engarde' };
 const SEC_QTE_FAILSAFE = 8.0; // seconds — hard kill if slider never stops (should never hit)
 
 // Simultaneous hit threshold for ATK vs ATK
-const WIN_DOUBLE = 0.05;
+const WIN_DOUBLE = 0.025;  // 25ms window — tighter than before; small gap already produces a winner
 // Max RT before you're considered "didn't react"
 const RT_MAX = 1.5;
 
@@ -2230,14 +2230,16 @@ let sliderActive = false;
 let secResolved = false;
 let secPromiseRes = null;
 let secAITargetX = null;    // AI's target X; null for human path
-const SLIDER_SPEED = 100 / 650;   // %/ms → full crossing 0→100 takes ~650ms
+const SLIDER_SPEED_SINGLE = 100 / 650;   // %/ms — SINGLE: full crossing ~650ms, round-trip ~1.3s
+const SLIDER_SPEED_PVP    = 100 / 480;   // %/ms — PVP: full crossing ~480ms, round-trip ~0.96s (35% faster)
 
 function _sliderTick(now) {
   if (!sliderActive) return;
   const dt = now - sliderLastT;
   sliderLastT = now;
   const prevPos = sliderPos;
-  sliderPos += sliderDir * SLIDER_SPEED * dt;
+  const speed = (mode === 'PVP') ? SLIDER_SPEED_PVP : SLIDER_SPEED_SINGLE;
+  sliderPos += sliderDir * speed * dt;
   if (sliderPos >= 100) { sliderPos = 100; sliderDir = -1; }
   if (sliderPos <= 0)   { sliderPos = 0;   sliderDir = 1; }
   const activeCursor = document.querySelector('.sec-defense.show .sec-cursor');
