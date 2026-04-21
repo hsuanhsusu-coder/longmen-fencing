@@ -603,10 +603,10 @@
     display: none; position: absolute; inset: 0;
     z-index: 70; flex-direction: column;
     align-items: center; justify-content: center;
-    gap: clamp(6px, 1.4vh, 12px);
-    background: radial-gradient(ellipse at center, rgba(255,48,48,0.08) 0%, rgba(0,0,0,0.72) 60%, rgba(0,0,0,0.92) 100%);
+    gap: clamp(8px, 1.6vh, 14px);
+    background: radial-gradient(ellipse at center, rgba(255,48,48,0.10) 0%, rgba(0,0,0,0.78) 60%, rgba(0,0,0,0.94) 100%);
     backdrop-filter: blur(3px);
-    padding: 6px;
+    padding: 10px;
   }
   .sec-defense.show {
     display: flex;
@@ -618,7 +618,7 @@
   }
   .sec-label {
     font-family: 'Shippori Mincho', serif;
-    font-size: clamp(14px, 2.4vw, 19px); font-weight: 900;
+    font-size: clamp(15px, 2.4vw, 20px); font-weight: 900;
     color: var(--danger); letter-spacing: 4px;
     text-shadow: 0 0 16px rgba(255,48,48,0.8);
     animation: secLabelPulse 0.5s ease-in-out infinite alternate;
@@ -630,121 +630,140 @@
   .sec-phase {
     font-family: 'Noto Sans TC', sans-serif;
     font-size: clamp(11px, 1.6vw, 13px); font-weight: 700;
-    color: rgba(255,255,255,0.55); letter-spacing: 3px;
+    color: rgba(255,255,255,0.6); letter-spacing: 3px;
     margin-top: -4px;
   }
-  .sec-btns {
-    display: flex; gap: clamp(8px, 2vw, 14px);
-    align-items: stretch; justify-content: center;
-    width: 100%; max-width: 320px;
+
+  /* ====== SLIDER QTE ====== */
+  .sec-slider-wrap {
+    width: 92%; max-width: 320px;
+    margin-top: clamp(2px, 0.6vh, 6px);
   }
-  .sec-btn {
-    flex: 1; min-height: 94px;
-    padding: 8px 6px 12px;
-    border-radius: 10px;
-    border: 2px solid;
-    background: rgba(255,255,255,0.04);
-    cursor: pointer; position: relative; overflow: hidden;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 2px; line-height: 1.1;
-    transition: transform 0.08s, box-shadow 0.2s, opacity 0.2s, border-color 0.2s;
+  .sec-slider-track {
+    position: relative;
+    width: 100%;
+    height: clamp(26px, 4.5vh, 34px);
+    background: linear-gradient(180deg, rgba(70,70,70,0.55), rgba(30,30,30,0.75));
+    border: 2px solid rgba(255,255,255,0.12);
+    border-radius: 6px;
+    box-shadow: inset 0 0 12px rgba(0,0,0,0.6);
+    overflow: hidden;
   }
-  .sec-btn:active { transform: scale(0.94); }
-  .sec-btn.pull {
-    border-color: var(--cyan);
-    color: var(--cyan);
-    box-shadow: 0 0 14px rgba(0,229,255,0.25), inset 0 0 10px rgba(0,229,255,0.08);
+  .sec-zone {
+    position: absolute; top: 0; bottom: 0;
+    pointer-events: none;
   }
-  .sec-btn.parry {
-    border-color: var(--gold);
-    color: var(--gold);
-    box-shadow: 0 0 18px rgba(255,215,0,0.35), inset 0 0 10px rgba(255,215,0,0.08);
+  .sec-zone-gold {
+    left: 45%; width: 10%;
+    background: linear-gradient(180deg, rgba(255,215,0,0.65), rgba(255,168,25,0.45));
+    box-shadow: 0 0 14px rgba(255,215,0,0.8), inset 0 0 10px rgba(255,215,0,0.4);
   }
-  /* Armed = chosen in Phase A, awaiting Phase C execution */
-  .sec-btn.armed {
-    border-width: 3px;
-    transform: scale(1.06);
-    background: rgba(255,255,255,0.08);
+  .sec-zone-blue-l {
+    left: 35%; width: 10%;
+    background: linear-gradient(180deg, rgba(0,229,255,0.40), rgba(0,180,200,0.28));
+    box-shadow: 0 0 10px rgba(0,229,255,0.5), inset 0 0 8px rgba(0,229,255,0.25);
   }
-  .sec-btn.pull.armed {
-    box-shadow: 0 0 30px rgba(0,229,255,0.8), inset 0 0 18px rgba(0,229,255,0.25);
-    animation: armedPulse 0.8s ease-in-out infinite alternate;
+  .sec-zone-blue-r {
+    left: 55%; width: 10%;
+    background: linear-gradient(180deg, rgba(0,229,255,0.40), rgba(0,180,200,0.28));
+    box-shadow: 0 0 10px rgba(0,229,255,0.5), inset 0 0 8px rgba(0,229,255,0.25);
   }
-  .sec-btn.parry.armed {
-    box-shadow: 0 0 34px rgba(255,215,0,0.9), inset 0 0 20px rgba(255,215,0,0.3);
-    animation: armedPulse 0.8s ease-in-out infinite alternate;
+  .sec-slider-center-tick {
+    position: absolute; left: 50%; top: -3px; bottom: -3px;
+    width: 1px; background: rgba(255,255,255,0.5);
+    box-shadow: 0 0 4px rgba(255,255,255,0.6);
+    transform: translateX(-50%);
+    pointer-events: none;
   }
-  @keyframes armedPulse {
-    from { filter: brightness(1); }
-    to   { filter: brightness(1.3); }
+  /* Cursor — the fast-moving line player must time */
+  .sec-cursor {
+    position: absolute; left: 0; top: -4px; bottom: -4px;
+    width: 3px;
+    background: #fff;
+    box-shadow: 0 0 14px rgba(255,255,255,0.9), 0 0 6px rgba(255,255,255,1);
+    transform: translateX(-50%);
+    will-change: left;
+    transition: background 0.1s, box-shadow 0.1s;
   }
-  /* Not-chosen button once one is armed */
-  .sec-btn.dimmed {
-    opacity: 0.28; pointer-events: none;
-    transform: scale(0.95);
-    filter: grayscale(0.3);
+  .sec-cursor.locked {
+    transition: none;
   }
-  .sec-ico {
-    font-size: clamp(22px, 3.8vw, 28px);
-    line-height: 1;
+  .sec-cursor.locked.gold  { background: var(--gold); box-shadow: 0 0 20px var(--gold), 0 0 10px var(--flame); }
+  .sec-cursor.locked.blue  { background: var(--cyan); box-shadow: 0 0 18px var(--cyan), 0 0 8px var(--cyan); }
+  .sec-cursor.locked.gray  { background: var(--danger); box-shadow: 0 0 18px var(--danger), 0 0 8px var(--red-dark); }
+
+  /* Zone labels below track */
+  .sec-slider-labels {
+    display: flex; justify-content: space-between;
+    margin-top: 4px;
+    font-family: 'Orbitron'; font-size: clamp(9px, 1.3vw, 11px);
+    font-weight: 700; letter-spacing: 1px;
+    padding: 0 2px;
   }
-  .sec-name {
-    font-family: 'Noto Sans TC', sans-serif;
-    font-size: clamp(14px, 2.1vw, 17px);
-    font-weight: 900; letter-spacing: 1px;
+  .sec-slider-labels .lb-fail { color: rgba(255,100,100,0.55); flex: 0 0 35%; }
+  .sec-slider-labels .lb-good { color: var(--cyan); flex: 0 0 10%; text-align: center; }
+  .sec-slider-labels .lb-perf {
+    color: var(--gold); flex: 0 0 10%; text-align: center;
+    text-shadow: 0 0 8px rgba(255,215,0,0.6);
   }
-  .sec-tag {
-    font-family: 'Orbitron'; font-size: clamp(9px, 1.4vw, 11px);
-    font-weight: 700; color: rgba(255,255,255,0.65);
-    text-align: center; line-height: 1.3;
+  /* Single 反擊 action button */
+  .sec-action-btn {
+    padding: clamp(9px, 1.6vh, 13px) clamp(26px, 5vw, 38px);
+    font-family: 'Shippori Mincho', serif;
+    font-size: clamp(18px, 2.9vw, 24px); font-weight: 900;
+    color: #fff; background: linear-gradient(180deg, var(--red), var(--red-dark));
+    border: 2px solid var(--danger); border-radius: 8px;
+    letter-spacing: 8px; cursor: pointer;
+    box-shadow: 0 0 24px rgba(255,48,48,0.6), inset 0 0 14px rgba(255,107,53,0.3);
+    animation: actionPulse 0.75s ease-in-out infinite alternate;
+    margin-top: clamp(2px, 1vh, 8px);
+    text-shadow: 0 0 8px rgba(255,255,255,0.4);
   }
-  /* Central Prêts/反擊 prompt (Phase B & C) */
-  .sec-prompt {
+  @keyframes actionPulse {
+    from { transform: scale(1); box-shadow: 0 0 20px rgba(255,48,48,0.5), inset 0 0 10px rgba(255,107,53,0.25); }
+    to   { transform: scale(1.05); box-shadow: 0 0 30px rgba(255,48,48,0.9), inset 0 0 18px rgba(255,107,53,0.45); }
+  }
+  .sec-action-btn:active { transform: scale(0.95); }
+  .sec-action-btn.disabled {
+    animation: none;
+    opacity: 0.35; pointer-events: none;
+    filter: grayscale(0.4);
+  }
+
+  /* Result text after QTE lock */
+  .sec-result {
     position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     font-family: 'Shippori Mincho', serif;
-    font-weight: 900; letter-spacing: 8px;
+    font-weight: 900; letter-spacing: 6px;
     text-align: center; pointer-events: none;
     opacity: 0; z-index: 5;
-    text-shadow: 0 0 24px rgba(255,48,48,0.7);
-    transition: opacity 0.18s ease-out;
+    transition: opacity 0.15s;
   }
-  .sec-prompt.show { opacity: 1; }
-  .sec-prompt.ready1 {
-    font-size: clamp(26px, 4.6vw, 38px);
-    color: var(--gold-dim);
-    text-shadow: 0 0 20px rgba(198,150,30,0.5);
-  }
-  .sec-prompt.ready2 {
-    font-size: clamp(32px, 5.5vw, 46px);
+  .sec-result.show { opacity: 1; }
+  .sec-result.gold {
+    font-size: clamp(44px, 7.5vw, 66px);
     color: var(--gold);
-    text-shadow: 0 0 28px rgba(255,215,0,0.8);
-    animation: promptPulse 0.25s ease-out infinite alternate;
+    text-shadow: 0 0 32px var(--gold), 0 0 16px var(--flame);
+    animation: resultPop 0.35s cubic-bezier(.2,.9,.3,1.3);
   }
-  .sec-prompt.riposte {
-    font-size: clamp(42px, 7.5vw, 64px);
+  .sec-result.blue {
+    font-size: clamp(36px, 6vw, 52px);
+    color: var(--cyan);
+    text-shadow: 0 0 24px var(--cyan);
+    animation: resultPop 0.35s cubic-bezier(.2,.9,.3,1.3);
+  }
+  .sec-result.gray {
+    font-size: clamp(36px, 6vw, 52px);
     color: var(--danger);
-    text-shadow: 0 0 40px rgba(255,48,48,1), 0 0 20px rgba(255,107,53,1);
-    animation: ripostePop 0.32s cubic-bezier(.2,.9,.3,1.3);
+    text-shadow: 0 0 26px var(--danger);
+    animation: resultPop 0.35s cubic-bezier(.2,.9,.3,1.3);
   }
-  @keyframes promptPulse {
-    from { transform: translate(-50%, -50%) scale(1); }
-    to   { transform: translate(-50%, -50%) scale(1.08); }
-  }
-  @keyframes ripostePop {
+  @keyframes resultPop {
     0%   { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
     50%  { transform: translate(-50%, -50%) scale(1.25); opacity: 1; }
     100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
   }
-  /* Full-side tap area for Phase C execution */
-  .sec-tap-zone {
-    position: absolute; inset: 0; z-index: 6;
-    cursor: pointer; display: none;
-  }
-  .sec-tap-zone.active { display: block; }
-  /* Expired = missed riposte window */
-  .sec-btn.expired { opacity: 0.35; pointer-events: none; }
 
   /* Reaction zone (full side touch area during WAIT/REACT) */
   .react-zone {
@@ -942,7 +961,7 @@
     <div class="menu-divider"></div>
     <div class="menu-btns">
       <button class="menu-btn" id="btn-easy">👤 vs 國北實小<small>新手模式</small></button>
-      <button class="menu-btn" id="btn-normal">👤 vs 光榮國中<small>衛冕軍</small></button>
+      <button class="menu-btn" id="btn-normal">👤 vs 光榮國中<small>認真模式</small></button>
       <button class="menu-btn" id="btn-pvp">👥 同機對戰<small>雙人PvP</small></button>
     </div>
     <div class="menu-rules">
@@ -952,13 +971,13 @@
       </div>
       <div class="moves-row">
         <div class="move-card"><span class="m-icon">🗡️</span><b>搶攻</b>拚反應速度<br><i>被誘敵方反擊</i></div>
-        <div class="move-card"><span class="m-icon">🛡️</span><b>誘敵</b>防守待機<br><i>被攻擊時觸發二段式</i></div>
+        <div class="move-card"><span class="m-icon">🛡️</span><b>誘敵</b>防守待機<br><i>被攻擊觸發判定條</i></div>
       </div>
       <div class="rule-row" style="margin-top:4px;color:rgba(255,255,255,0.72)">
-        <b>搶攻 vs 誘敵</b>→ 子彈時間｜頓幀瞬間兩段式反擊：
-        <br>A <b>選招</b>：<b style="color:var(--cyan)">💨 拔距</b>或 <b style="color:var(--gold)">🛡️ 撥擋</b> 任你選（無倒數）
-        <br>B <b>Allez 式倒數</b>：準備… 準備準備… <b style="color:var(--danger)">反擊！</b>
-        <br>C <b>點擊執行</b>：拔距 <b class="bc">0.55s</b> 中斷｜撥擋 <b class="bc">0.40s</b> 反殺
+        <b>搶攻 vs 誘敵</b>→ 子彈時間｜游標來回掃過判定條，按 <b style="color:var(--danger)">反擊！</b> 停下：
+        <br><b style="color:var(--gold)">🟡 金區 (±5%)</b> 撥擋反殺得分
+        ｜<b style="color:var(--cyan)">🔵 藍區 (±15%)</b> 拔距化解 · 回合重來
+        ｜<span style="color:rgba(255,100,100,0.8)">⚫ 灰區</span> 被刺穿失分
       </div>
       <div class="rule-footer">先取 <b>5</b> 分奪金 · 搶拍犯規直接失分</div>
     </div>
@@ -1107,21 +1126,25 @@
         </div>
         <div class="sec-defense" id="p1-sec">
           <div class="sec-label">⚡ 對方出劍！</div>
-          <div class="sec-phase" id="p1-sec-phase">選擇你的反擊</div>
-          <div class="sec-btns">
-            <div class="sec-btn pull" id="p1-sec-pull">
-              <span class="sec-ico">💨</span>
-              <span class="sec-name">後退拔距</span>
-              <span class="sec-tag">安全中斷<br>0.55s</span>
+          <div class="sec-phase" id="p1-sec-phase">抓準時機點反擊</div>
+          <div class="sec-slider-wrap">
+            <div class="sec-slider-track">
+              <div class="sec-zone sec-zone-blue-l"></div>
+              <div class="sec-zone sec-zone-gold"></div>
+              <div class="sec-zone sec-zone-blue-r"></div>
+              <div class="sec-slider-center-tick"></div>
+              <div class="sec-cursor" id="p1-sec-cursor"></div>
             </div>
-            <div class="sec-btn parry" id="p1-sec-parry">
-              <span class="sec-ico">🛡️</span>
-              <span class="sec-name">原地撥擋</span>
-              <span class="sec-tag">反殺得分<br>0.40s</span>
+            <div class="sec-slider-labels">
+              <span class="lb-fail">失敗</span>
+              <span class="lb-good">防守</span>
+              <span class="lb-perf">完美</span>
+              <span class="lb-good">防守</span>
+              <span class="lb-fail">失敗</span>
             </div>
           </div>
-          <div class="sec-prompt" id="p1-sec-prompt"></div>
-          <div class="sec-tap-zone" id="p1-sec-tap"></div>
+          <button class="sec-action-btn" id="p1-sec-go">⚔ 反擊！</button>
+          <div class="sec-result" id="p1-sec-result"></div>
         </div>
       </div>
 
@@ -1186,21 +1209,25 @@
         </div>
         <div class="sec-defense" id="p2-sec">
           <div class="sec-label">⚡ 對方出劍！</div>
-          <div class="sec-phase" id="p2-sec-phase">選擇你的反擊</div>
-          <div class="sec-btns">
-            <div class="sec-btn pull" id="p2-sec-pull">
-              <span class="sec-ico">💨</span>
-              <span class="sec-name">後退拔距</span>
-              <span class="sec-tag">安全中斷<br>0.55s</span>
+          <div class="sec-phase" id="p2-sec-phase">抓準時機點反擊</div>
+          <div class="sec-slider-wrap">
+            <div class="sec-slider-track">
+              <div class="sec-zone sec-zone-blue-l"></div>
+              <div class="sec-zone sec-zone-gold"></div>
+              <div class="sec-zone sec-zone-blue-r"></div>
+              <div class="sec-slider-center-tick"></div>
+              <div class="sec-cursor" id="p2-sec-cursor"></div>
             </div>
-            <div class="sec-btn parry" id="p2-sec-parry">
-              <span class="sec-ico">🛡️</span>
-              <span class="sec-name">原地撥擋</span>
-              <span class="sec-tag">反殺得分<br>0.40s</span>
+            <div class="sec-slider-labels">
+              <span class="lb-fail">失敗</span>
+              <span class="lb-good">防守</span>
+              <span class="lb-perf">完美</span>
+              <span class="lb-good">防守</span>
+              <span class="lb-fail">失敗</span>
             </div>
           </div>
-          <div class="sec-prompt" id="p2-sec-prompt"></div>
-          <div class="sec-tap-zone" id="p2-sec-tap"></div>
+          <button class="sec-action-btn" id="p2-sec-go">⚔ 反擊！</button>
+          <div class="sec-result" id="p2-sec-result"></div>
         </div>
       </div>
     </div>
@@ -1293,10 +1320,9 @@ const TNAMES = { ATTACK: '🗡️ 搶攻', DEFEND: '🛡️ 誘敵' };
 const TSHORT = { ATTACK: '搶攻', DEFEND: '誘敵' };
 const POSE   = { ATTACK: 'attack', DEFEND: 'engarde' };
 
-// Secondary defense (triggered on ATK vs DEF) — replaces old PULL/PARRY lock windows
-const SEC_WIN_PULL  = 0.55; // safe interrupt — riposte-relative reaction window
-const SEC_WIN_PARRY = 0.40; // risky counter — tighter window
-const SEC_TIMEOUT   = 0.80; // overall failsafe from riposte prompt
+// Secondary defense: Slider QTE — no reaction time windows needed.
+// Zone judgement happens in resolveSecondaryDefense() based on stopped X%.
+const SEC_QTE_FAILSAFE = 8.0; // seconds — hard kill if slider never stops (should never hit)
 
 // Simultaneous hit threshold for ATK vs ATK
 const WIN_DOUBLE = 0.05;
@@ -1326,23 +1352,23 @@ const AI_OPPONENTS = {
     rtStd: 0.06,
     // Primary tactic weights
     basePrefs: { ATTACK: 0.55, DEFEND: 0.45 },
-    // Secondary defense fallibility
-    secPullBias: 0.65,        // likes to play safe
-    secPullSlowRate: 0.30,    // 30% pulls are too slow
-    secParryTooSlowRate: 0.50,// 50% parries are too slow (very error-prone!)
+    // Slider QTE skill: probability of landing in each zone
+    sliderPerfectRate: 0.10,  // 10% nails the gold zone
+    sliderGoodRate: 0.30,     // 30% lands in blue (pull)
+    // Remaining 60% = fail (gray zone, attacker scores)
     // Adapts less to player patterns
     adaptStrength: 0.3,
   },
   NORMAL: {
     name: '光榮國中',
     short: '光榮',
-    subtitle: '衛冕軍',
+    subtitle: '認真模式',
     rtMean: 0.26,
     rtStd: 0.045,
     basePrefs: { ATTACK: 0.52, DEFEND: 0.48 },
-    secPullBias: 0.60,
-    secPullSlowRate: 0.15,
-    secParryTooSlowRate: 0.30,
+    sliderPerfectRate: 0.28,  // 28% perfect
+    sliderGoodRate: 0.42,     // 42% blue
+    // Remaining 30% = fail
     adaptStrength: 1.0,
   }
 };
@@ -1418,29 +1444,34 @@ const AI = {
     return rt * 1000;
   },
 
-  // Pre-select for secondary defense (returns just the CHOICE, not RT)
-  preSelectSecondary() {
+  // Slider QTE: roll target X (0-100) weighted by profile skill.
+  // AI will "naturally" stop at this X when the cursor crosses it.
+  rollSliderTarget() {
     const p = this.profile;
-    let pullBias = p.secPullBias;
-    if (this.scoreDiff <= -2) pullBias -= 0.15;
-    else if (this.scoreDiff >= 2) pullBias += 0.12;
-    return (Math.random() < pullBias) ? 'PULL' : 'PARRY';
-  },
-
-  // Execution RT for the pre-selected secondary choice
-  rollSecondaryRT(choice) {
-    const p = this.profile;
-    if (choice === 'PULL') {
-      const slow = Math.random() < p.secPullSlowRate;
-      return slow
-        ? 0.45 + Math.random() * 0.10     // 0.45-0.55 → misses pull window
-        : 0.22 + Math.random() * 0.14;    // 0.22-0.36 → in pull window
-    } else { // PARRY
-      const tooSlow = Math.random() < p.secParryTooSlowRate;
-      return tooSlow
-        ? 0.34 + Math.random() * 0.12     // 0.34-0.46 → misses parry window
-        : 0.18 + Math.random() * 0.12;    // 0.18-0.30 → in parry window (edge)
+    let perfectRate = p.sliderPerfectRate;
+    let goodRate = p.sliderGoodRate;
+    // Rubber band: when losing, try a bit harder; when winning, relax
+    if (this.scoreDiff <= -2) {
+      perfectRate = Math.min(0.50, perfectRate + 0.08);
+      goodRate    = Math.min(0.55, goodRate    + 0.05);
+    } else if (this.scoreDiff >= 2) {
+      perfectRate = Math.max(0.05, perfectRate - 0.05);
     }
+    const r = Math.random();
+    if (r < perfectRate) {
+      // Gold zone: 45-55 (slight bias away from exact edges)
+      return 46 + Math.random() * 8;
+    }
+    if (r < perfectRate + goodRate) {
+      // Blue zones: either 35-44 or 56-65
+      return (Math.random() < 0.5)
+        ? 36 + Math.random() * 8     // left blue
+        : 57 + Math.random() * 8;    // right blue
+    }
+    // Gray zone (fail): avoid absolute extremes so it still looks like an attempt
+    return (Math.random() < 0.5)
+      ? 8 + Math.random() * 26       // 8-34 (left gray)
+      : 66 + Math.random() * 26;     // 66-92 (right gray)
   },
 
   updateScoreDiff(myScore, oppScore) {
@@ -1590,13 +1621,12 @@ function exitToMenu() {
   document.getElementById('hitstop').classList.remove('on');
   resetBox();
   document.getElementById('rt-race').classList.remove('show');
-  // Clear any lingering secondary-defense state
-  secState = 'IDLE'; secArmed = null; secResolved = true;
-  _clearSecTimers();
+  // Clear any lingering slider-QTE state
+  sliderActive = false; secResolved = true; secAITargetX = null;
+  if (sliderAF) { cancelAnimationFrame(sliderAF); sliderAF = null; }
+  sliderPos = 0; sliderDir = 1;
   document.getElementById('p1-sec').classList.remove('show');
   document.getElementById('p2-sec').classList.remove('show');
-  document.getElementById('p1-sec-tap').classList.remove('active');
-  document.getElementById('p2-sec-tap').classList.remove('active');
   $game.style.display = 'none';
   $menu.style.display = 'flex';
   document.getElementById('victory').classList.remove('show');
@@ -2028,12 +2058,12 @@ function animateRTRace(rt1, rt2, result) {
           setTag(tag1, 'hit', '先擊中');
           setTag(tag2, 'slow', '慢了');
           verdict.className = 'rt-verdict p1 show';
-          verdict.innerHTML = `🏆 龍門 先擊中！<small>比光榮快 ${gap}s · 取得攻擊權</small>`;
+          verdict.innerHTML = `🏆 龍門 先擊中！<small>比${TEAM2}快 ${gap}s · 取得攻擊權</small>`;
         } else {
           setTag(tag2, 'hit', '先擊中');
           setTag(tag1, 'slow', '慢了');
           verdict.className = 'rt-verdict p2 show';
-          verdict.innerHTML = `🏆 光榮 先擊中！<small>比龍門快 ${gap}s · 取得攻擊權</small>`;
+          verdict.innerHTML = `🏆 ${TEAM2} 先擊中！<small>比龍門快 ${gap}s · 取得攻擊權</small>`;
         }
       }
       else if (result.type === 'parry' || result.type === 'pull') {
@@ -2049,7 +2079,7 @@ function animateRTRace(rt1, rt2, result) {
           setTag(tag2, 'hit', moveCh + '成功');
           setTag(tag1, 'slow', '被剋');
           verdict.className = 'rt-verdict p2 show';
-          verdict.innerHTML = `🛡️ 光榮 ${moveCh}成功！<small>反應 ${result.defRT.toFixed(3)}s · 窗口 ${result.rtWindow}s 內</small>`;
+          verdict.innerHTML = `🛡️ ${TEAM2} ${moveCh}成功！<small>反應 ${result.defRT.toFixed(3)}s · 窗口 ${result.rtWindow}s 內</small>`;
         }
       }
       else if (result.type === 'piercing') {
@@ -2059,12 +2089,12 @@ function animateRTRace(rt1, rt2, result) {
           setTag(tag1, 'hit', '刺穿');
           setTag(tag2, 'slow', defMoveCh + '太慢');
           verdict.className = 'rt-verdict p1 show';
-          verdict.innerHTML = `💀 龍門 刺穿防線！<small>光榮 ${defMoveCh} ${result.defRT.toFixed(3)}s · 超過 ${result.rtWindow}s 窗口</small>`;
+          verdict.innerHTML = `💀 龍門 刺穿防線！<small>${TEAM2} ${defMoveCh} ${result.defRT.toFixed(3)}s · 超過 ${result.rtWindow}s 窗口</small>`;
         } else {
           setTag(tag2, 'hit', '刺穿');
           setTag(tag1, 'slow', defMoveCh + '太慢');
           verdict.className = 'rt-verdict p2 show';
-          verdict.innerHTML = `💀 光榮 刺穿防線！<small>龍門 ${defMoveCh} ${result.defRT.toFixed(3)}s · 超過 ${result.rtWindow}s 窗口</small>`;
+          verdict.innerHTML = `💀 ${TEAM2} 刺穿防線！<small>龍門 ${defMoveCh} ${result.defRT.toFixed(3)}s · 超過 ${result.rtWindow}s 窗口</small>`;
         }
       }
     }, maxDur + 80));
@@ -2184,232 +2214,156 @@ async function resolveReferee() {
 }
 
 // ============================================================
-// SECONDARY DEFENSE (hit-stop 2-button choice for defender)
+// SECONDARY DEFENSE — Slider QTE timing mechanic
+//   Triggered on ATK vs DEF. A cursor ping-pongs across a horizontal bar
+//   (0-100%). Player taps "反擊!" to stop it; position judges outcome:
+//     Gold   zone (45-55): parry → defender scores
+//     Blue   zone (35-44, 56-65): pull → no score, reset
+//     Gray   zone (<35, >65): fail → attacker scores
+//   Uses requestAnimationFrame for precise cursor position on tap.
 // ============================================================
-// ============================================================
-// SECONDARY DEFENSE — Two-phase flow
-//   Phase A (SELECT): buttons appear, no timer. Player taps to ARM a choice.
-//   Phase B (WAIT):   central prompt "準備… / 準備準備… / 反擊！" with random Allez-style delay.
-//   Phase C (REACT):  from the "反擊！" flash, player must tap anywhere on their side
-//                     within the riposte window (Pull 0.55s / Parry 0.40s).
-// ============================================================
-let secState = 'IDLE';          // 'SELECT' | 'WAIT' | 'REACT' | 'DONE'
-let secArmed = null;            // 'PULL' | 'PARRY' — player's locked-in choice
-let secRiposteT = 0;            // performance.now() when "反擊！" appeared
+let sliderAF = null;
+let sliderPos = 0;          // current X position (0-100)
+let sliderDir = 1;          // +1 moving right, -1 moving left
+let sliderLastT = 0;        // last frame timestamp (ms)
+let sliderActive = false;
 let secResolved = false;
 let secPromiseRes = null;
-let secPhaseTimers = [];        // local timers for prompt sequence
+let secAITargetX = null;    // AI's target X; null for human path
+const SLIDER_SPEED = 100 / 650;   // %/ms → full crossing 0→100 takes ~650ms
 
-function _clearSecTimers() {
-  while (secPhaseTimers.length) clearTimeout(secPhaseTimers.pop());
+function _sliderTick(now) {
+  if (!sliderActive) return;
+  const dt = now - sliderLastT;
+  sliderLastT = now;
+  const prevPos = sliderPos;
+  sliderPos += sliderDir * SLIDER_SPEED * dt;
+  if (sliderPos >= 100) { sliderPos = 100; sliderDir = -1; }
+  if (sliderPos <= 0)   { sliderPos = 0;   sliderDir = 1; }
+  const activeCursor = document.querySelector('.sec-defense.show .sec-cursor');
+  if (activeCursor) activeCursor.style.left = sliderPos + '%';
+
+  // AI: stop naturally when cursor crosses its target X
+  if (secAITargetX !== null && !secResolved) {
+    const crossedRight = prevPos < secAITargetX && sliderPos >= secAITargetX;
+    const crossedLeft  = prevPos > secAITargetX && sliderPos <= secAITargetX;
+    if (crossedRight || crossedLeft) {
+      _lockSlider(secAITargetX);
+      return;
+    }
+  }
+  sliderAF = requestAnimationFrame(_sliderTick);
+}
+
+function _lockSlider(forcedX) {
+  if (secResolved) return;
+  secResolved = true;
+  sliderActive = false;
+  if (sliderAF) { cancelAnimationFrame(sliderAF); sliderAF = null; }
+  const x = (forcedX !== undefined) ? forcedX : sliderPos;
+
+  const activeCursor = document.querySelector('.sec-defense.show .sec-cursor');
+  const activeResult = document.querySelector('.sec-defense.show .sec-result');
+  const activeBtn    = document.querySelector('.sec-defense.show .sec-action-btn');
+  const activePhase  = document.querySelector('.sec-defense.show .sec-phase');
+  if (activeBtn) activeBtn.classList.add('disabled');
+  if (activeCursor) {
+    activeCursor.style.left = x + '%';
+    activeCursor.classList.add('locked');
+    if (x >= 45 && x <= 55)                     activeCursor.classList.add('gold');
+    else if ((x >= 35 && x < 45) || (x > 55 && x <= 65))  activeCursor.classList.add('blue');
+    else                                         activeCursor.classList.add('gray');
+  }
+  if (activeResult) {
+    if (x >= 45 && x <= 55) {
+      activeResult.className = 'sec-result gold show';
+      activeResult.textContent = 'PERFECT!';
+      SFX.score();
+    } else if ((x >= 35 && x < 45) || (x > 55 && x <= 65)) {
+      activeResult.className = 'sec-result blue show';
+      activeResult.textContent = 'GOOD';
+      SFX.clash();
+    } else {
+      activeResult.className = 'sec-result gray show';
+      activeResult.textContent = 'MISS!';
+      SFX.foul();
+    }
+  }
+  if (activePhase) activePhase.textContent = '';
+
+  // Hold briefly so player sees the lock, then resolve and hide panel
+  setTimeout(() => {
+    document.getElementById('p1-sec').classList.remove('show');
+    document.getElementById('p2-sec').classList.remove('show');
+    if (secPromiseRes) { secPromiseRes({ x }); secPromiseRes = null; }
+  }, 700);
 }
 
 function enterSecondaryDefense(defPlayer) {
   return new Promise(resolve => {
-    secState = 'SELECT';
-    secArmed = null;
     secResolved = false;
     secPromiseRes = resolve;
-    _clearSecTimers();
+    secAITargetX = null;
+    sliderPos = 0;
+    sliderDir = 1;
 
-    const panelId  = defPlayer === 'P1' ? 'p1-sec' : 'p2-sec';
-    const panel    = document.getElementById(panelId);
-    const phaseEl  = document.getElementById(panelId + '-phase');
-    const promptEl = document.getElementById(panelId + '-prompt');
-    const tapEl    = document.getElementById(panelId + '-tap');
-    const pullBtn  = panel.querySelector('.sec-btn.pull');
-    const parryBtn = panel.querySelector('.sec-btn.parry');
+    const panelId = defPlayer === 'P1' ? 'p1-sec' : 'p2-sec';
+    const panel   = document.getElementById(panelId);
+    const cursor  = document.getElementById(panelId + '-cursor');
+    const actionBtn = document.getElementById(panelId + '-go');
+    const phaseEl = document.getElementById(panelId + '-phase');
+    const resultEl = document.getElementById(panelId + '-result');
 
     // Reset visual state
-    panel.querySelectorAll('.sec-btn').forEach(b => {
-      b.classList.remove('armed', 'dimmed', 'expired');
-    });
-    promptEl.className = 'sec-prompt';
-    promptEl.textContent = '';
-    tapEl.classList.remove('active');
+    cursor.classList.remove('locked', 'gold', 'blue', 'gray');
+    cursor.style.left = '0%';
+    actionBtn.classList.remove('disabled');
+    resultEl.className = 'sec-result';
+    resultEl.textContent = '';
     phaseEl.textContent = (defPlayer === 'P2' && mode === 'SINGLE')
-      ? '對手思考中…'
-      : '選擇你的反擊';
+      ? '對手蓄勢中…'
+      : '抓準時機點反擊';
     panel.classList.add('show');
 
     SFX.allez();
 
-    // ========== AI path ==========
+    // AI path: roll target X, stop naturally when cursor crosses it
     if (mode === 'SINGLE' && defPlayer === 'P2') {
-      // AI picks a choice quickly (0.3–0.7s "thinking" delay)
-      const aiChoice = AI.preSelectSecondary();      // 'PULL' or 'PARRY'
-      const thinkMs = 300 + Math.random() * 400;
-      secPhaseTimers.push(setTimeout(() => {
-        if (secResolved) return;
-        _armChoiceInner(panel, aiChoice);
-        phaseEl.textContent = '對手已鎖定…';
-        // Pre-schedule the AI's execution RT (from riposte prompt)
-        const aiExecRT = AI.rollSecondaryRT(aiChoice); // seconds
-        _runPromptSequence(promptEl, phaseEl, tapEl, () => {
-          // at "反擊!" — schedule AI tap
-          secPhaseTimers.push(setTimeout(() => {
-            if (!secResolved) _execute(aiExecRT);
-          }, aiExecRT * 1000));
-        });
-      }, thinkMs));
-      return;
+      const targetX = AI.rollSliderTarget();
+      // Delay before AI starts "aiming" (else it'd stop immediately on first frame)
+      const delayMs = 400 + Math.random() * 500;
+      setTimeout(() => {
+        if (!secResolved) secAITargetX = targetX;
+      }, delayMs);
     }
 
-    // ========== Human path (P1 player, or P2 in PVP) ==========
-    // Listen for the arm-click on a button; button handlers below call
-    // armSecondaryChoice(), which calls _armChoiceInner + _runPromptSequence.
+    // Start ping-pong
+    sliderActive = true;
+    sliderLastT = performance.now();
+    sliderAF = requestAnimationFrame(_sliderTick);
   });
 }
 
-// Arm a choice (Phase A → B transition). Exposed globally because button
-// pointerdown handlers need to call it.
-function armSecondaryChoice(defPlayer, choice) {
-  if (secState !== 'SELECT' || secResolved) return;
-  const panelId  = defPlayer === 'P1' ? 'p1-sec' : 'p2-sec';
-  const panel    = document.getElementById(panelId);
-  const phaseEl  = document.getElementById(panelId + '-phase');
-  const promptEl = document.getElementById(panelId + '-prompt');
-  const tapEl    = document.getElementById(panelId + '-tap');
-  _armChoiceInner(panel, choice);
-  phaseEl.textContent = '鎖定！看準時機…';
-  SFX.lock();
-  _runPromptSequence(promptEl, phaseEl, tapEl, null);
-}
-
-function _armChoiceInner(panel, choice) {
-  secArmed = choice;
-  secState = 'WAIT';
-  const pullBtn  = panel.querySelector('.sec-btn.pull');
-  const parryBtn = panel.querySelector('.sec-btn.parry');
-  if (choice === 'PULL') {
-    pullBtn.classList.add('armed');
-    parryBtn.classList.add('dimmed');
-  } else {
-    parryBtn.classList.add('armed');
-    pullBtn.classList.add('dimmed');
-  }
-}
-
-// Run the "準備…/準備準備…/反擊！" sequence. onRiposte callback fires at the
-// moment "反擊!" is displayed (used by AI to schedule its execution tap).
-function _runPromptSequence(promptEl, phaseEl, tapEl, onRiposte) {
-  // Random delays mimic Allez: unpredictable, but moderate range
-  const d1 = 600  + Math.random() * 600;   // 0.6–1.2s before "準備"
-  const d2 = 700  + Math.random() * 700;   // "準備" showing time
-  const d3 = 400  + Math.random() * 700;   // "準備準備" showing time
-
-  secPhaseTimers.push(setTimeout(() => {
-    if (secResolved) return;
-    promptEl.className = 'sec-prompt ready1 show';
-    promptEl.textContent = '準備…';
-
-    secPhaseTimers.push(setTimeout(() => {
-      if (secResolved) return;
-      promptEl.className = 'sec-prompt ready2 show';
-      promptEl.textContent = '準備 準備…';
-
-      secPhaseTimers.push(setTimeout(() => {
-        if (secResolved) return;
-        // ===== RIPOSTE! =====
-        promptEl.className = 'sec-prompt riposte show';
-        promptEl.textContent = '反擊！';
-        phaseEl.textContent = '點擊執行！';
-        secRiposteT = performance.now();
-        secState = 'REACT';
-        tapEl.classList.add('active');
-        SFX.score();
-        if (onRiposte) onRiposte();
-
-        // Failsafe timeout from riposte flash
-        secPhaseTimers.push(setTimeout(() => {
-          if (!secResolved && secState === 'REACT') {
-            _execute(SEC_TIMEOUT);
-          }
-        }, SEC_TIMEOUT * 1000));
-      }, d3));
-    }, d2));
-  }, d1));
-}
-
-// Execute Phase C: measure RT from riposte prompt, finish.
-function _execute(forcedRT) {
-  if (secResolved) return;
-  const rt = (forcedRT !== undefined)
-    ? forcedRT
-    : (performance.now() - secRiposteT) / 1000;
-  _finishSecondary({ choice: secArmed || 'TIMEOUT', rt });
-}
-
-function handleSecondaryTap(defPlayer) {
-  // Phase C only — Phase A uses button click, not zone tap.
-  if (secResolved || secState !== 'REACT') return;
-  _execute();
-}
-
-function _finishSecondary(data) {
-  if (secResolved) return;
-  secResolved = true;
-  secState = 'DONE';
-  _clearSecTimers();
-
-  // Brief hold so player sees the riposte prompt lock before panel fades
-  setTimeout(() => {
-    document.getElementById('p1-sec').classList.remove('show');
-    document.getElementById('p2-sec').classList.remove('show');
-    document.getElementById('p1-sec-tap').classList.remove('active');
-    document.getElementById('p2-sec-tap').classList.remove('active');
-  }, 140);
-
-  if (secPromiseRes) { secPromiseRes(data); secPromiseRes = null; }
-}
-
-// ----- Button bindings -----
-// Phase A: clicking a button ARMS that choice and triggers prompt sequence.
-document.getElementById('p1-sec-pull').addEventListener('pointerdown', e => {
+// Player-side "反擊!" button — stops cursor, reads current position
+document.getElementById('p1-sec-go').addEventListener('pointerdown', e => {
   e.preventDefault();
-  if (secState === 'SELECT') armSecondaryChoice('P1', 'PULL');
+  if (sliderActive && !secResolved && secAITargetX === null) _lockSlider();
 });
-document.getElementById('p1-sec-parry').addEventListener('pointerdown', e => {
+document.getElementById('p2-sec-go').addEventListener('pointerdown', e => {
   e.preventDefault();
-  if (secState === 'SELECT') armSecondaryChoice('P1', 'PARRY');
-});
-document.getElementById('p2-sec-pull').addEventListener('pointerdown', e => {
-  e.preventDefault();
-  if (mode === 'PVP' && secState === 'SELECT') armSecondaryChoice('P2', 'PULL');
-});
-document.getElementById('p2-sec-parry').addEventListener('pointerdown', e => {
-  e.preventDefault();
-  if (mode === 'PVP' && secState === 'SELECT') armSecondaryChoice('P2', 'PARRY');
-});
-
-// Phase C: tap zone covers full defender side, registers the execution tap.
-document.getElementById('p1-sec-tap').addEventListener('pointerdown', e => {
-  e.preventDefault();
-  handleSecondaryTap('P1');
-});
-document.getElementById('p2-sec-tap').addEventListener('pointerdown', e => {
-  e.preventDefault();
-  if (mode === 'PVP') handleSecondaryTap('P2');
+  if (mode === 'PVP' && sliderActive && !secResolved && secAITargetX === null) _lockSlider();
 });
 
 function resolveSecondaryDefense(initial, sec) {
   const { atkPlayer, defPlayer } = initial;
-  const { choice, rt } = sec;
-
-  if (choice === 'PULL') {
-    if (rt <= SEC_WIN_PULL) {
-      return { type: 'attack_no', winner: 'NONE', defPlayer, atkPlayer, secChoice: 'PULL', secRT: rt };
-    }
-    return { type: 'piercing', winner: atkPlayer, defPlayer, atkPlayer, secChoice: 'PULL', secRT: rt, failReason: 'pull_too_slow' };
+  const { x } = sec;
+  if (x >= 45 && x <= 55) {
+    return { type: 'parry', winner: defPlayer, defPlayer, atkPlayer, zone: 'perfect', sliderX: x };
   }
-  if (choice === 'PARRY') {
-    if (rt <= SEC_WIN_PARRY) {
-      return { type: 'parry', winner: defPlayer, defPlayer, atkPlayer, secChoice: 'PARRY', secRT: rt };
-    }
-    return { type: 'piercing', winner: atkPlayer, defPlayer, atkPlayer, secChoice: 'PARRY', secRT: rt, failReason: 'parry_too_slow' };
+  if ((x >= 35 && x < 45) || (x > 55 && x <= 65)) {
+    return { type: 'attack_no', winner: 'NONE', defPlayer, atkPlayer, zone: 'good', sliderX: x };
   }
-  // TIMEOUT (player never armed a choice, or missed riposte tap entirely)
-  return { type: 'piercing', winner: atkPlayer, defPlayer, atkPlayer, secChoice: 'TIMEOUT', secRT: rt, failReason: 'no_choice' };
+  return { type: 'piercing', winner: atkPlayer, defPlayer, atkPlayer, zone: 'fail', sliderX: x, failReason: 'bad_timing' };
 }
 
 // ============================================================
@@ -2440,12 +2394,13 @@ function fireOutcome(result) {
   }
 
   if (result.type === 'attack_no') {
-    // Pull succeeded — attack no, reset, no score
+    // Blue zone — good timing, round reset, no score
     SFX.clash();
     triggerFlash('blue');
     triggerImpact('斷！', '#00e5ff');
     lightBox('NONE');
-    $result.innerHTML = `<span class="result-defend">💨 ${defLabel} 後退拔距成功 · 攻擊無效 (Attack No)</span>`;
+    const zoneTxt = (result.sliderX !== undefined) ? `・落點 ${Math.round(result.sliderX)}%` : '';
+    $result.innerHTML = `<span class="result-defend">💨 ${defLabel} 拔距化解 · 回合重來${zoneTxt}</span>`;
     return;
   }
 
@@ -2463,7 +2418,8 @@ function fireOutcome(result) {
     triggerShake(); triggerFlash('blue'); triggerSpeedLines('rgba(0,229,255,0.35)');
     triggerImpact(pickFrom(IMPACT_PARRY), '#00e5ff');
     lightBox(result.winner);
-    $result.innerHTML = `<span class="result-defend">🛡️ ${winLabel} 原地撥擋 · 反殺得分！</span>`;
+    const perfTxt = (result.sliderX !== undefined) ? `<small>PERFECT 落點 ${Math.round(result.sliderX)}%</small>` : '';
+    $result.innerHTML = `<span class="result-defend">🛡️ ${winLabel} 原地撥擋 · 反殺得分！${perfTxt}</span>`;
     return;
   }
 
@@ -2472,9 +2428,9 @@ function fireOutcome(result) {
     triggerShake(); triggerFlash('gold'); triggerSpeedLines();
     triggerImpact(pickFrom(IMPACT_ATK), '#ffd700');
     lightBox(result.winner);
-    const reasonTxt = result.failReason === 'pull_too_slow' ? '（拔距太慢）'
-                    : result.failReason === 'parry_too_slow' ? '（撥擋太慢）'
-                    : result.failReason === 'no_choice' ? '（未反應）' : '';
+    const reasonTxt = (result.failReason === 'bad_timing')
+      ? `（防守太慢・落點 ${Math.round(result.sliderX)}%）`
+      : '';
     $result.innerHTML = `<span class="result-score">💀 ${winLabel} 刺穿防線！${reasonTxt}</span>`;
     return;
   }
@@ -2568,7 +2524,7 @@ function showVictory() {
   const p2full = (mode === 'SINGLE') ? AI.name : '光榮國中';
   document.getElementById('v-sub').textContent = isWin
     ? '龍門國中 奪下全中運軍刀金牌！'
-    : p2full + ' 守住衛冕寶座...';
+    : '不敵 ' + p2full + '... 明年再戰！';
 
   document.getElementById('v-score').innerHTML =
     '<span style="color:var(--p1)">' + s1 + '</span>' +
