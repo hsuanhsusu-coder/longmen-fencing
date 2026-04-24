@@ -260,6 +260,43 @@
   }
   .hud-score.pop { transform: scale(1.45); }
 
+  /* AI mood badge — small pill that flashes when AI's psychological state changes */
+  .mood-badge {
+    display: none;
+    margin-left: 4px;
+    font-size: clamp(10px, 1.4vw, 13px);
+    font-weight: 800; letter-spacing: 1px;
+    padding: 2px 8px; border-radius: 10px;
+    font-family: 'Noto Sans TC', sans-serif;
+    border: 1px solid transparent;
+    vertical-align: middle;
+    animation: moodIn 0.3s cubic-bezier(.2,.9,.3,1.3);
+    position: relative;
+    z-index: 3;
+  }
+  .mood-badge.show { display: inline-block; }
+  .mood-badge.tilt {
+    color: #ff8a3a; border-color: rgba(255,138,58,0.55);
+    background: rgba(255,80,20,0.15); text-shadow: 0 0 8px rgba(255,100,30,0.6);
+  }
+  .mood-badge.clutch {
+    color: #ffffff; border-color: rgba(255,255,255,0.7);
+    background: rgba(255,255,255,0.1); text-shadow: 0 0 10px rgba(255,255,255,0.9);
+  }
+  .mood-badge.cocky {
+    color: #ffd700; border-color: rgba(255,215,0,0.6);
+    background: rgba(255,215,0,0.1); text-shadow: 0 0 8px rgba(255,215,0,0.7);
+  }
+  .mood-badge.hesitant {
+    color: #aaa; border-color: rgba(180,180,200,0.4);
+    background: rgba(120,120,140,0.15);
+  }
+  @keyframes moodIn {
+    0%   { transform: scale(0.4); opacity: 0; }
+    60%  { transform: scale(1.25); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
   /* Streak aura */
   .streak-aura {
     position: absolute; inset: -6px -10px; border-radius: 20px;
@@ -694,17 +731,17 @@
     pointer-events: none;
   }
   .sec-zone-gold {
-    left: 45%; width: 10%;
-    background: linear-gradient(180deg, rgba(255,215,0,0.65), rgba(255,168,25,0.45));
+    left: 47%; width: 6%;
+    background: linear-gradient(180deg, rgba(255,215,0,0.72), rgba(255,168,25,0.52));
     box-shadow: 0 0 14px rgba(255,215,0,0.8), inset 0 0 10px rgba(255,215,0,0.4);
   }
   .sec-zone-blue-l {
-    left: 35%; width: 10%;
+    left: 35%; width: 12%;
     background: linear-gradient(180deg, rgba(0,229,255,0.40), rgba(0,180,200,0.28));
     box-shadow: 0 0 10px rgba(0,229,255,0.5), inset 0 0 8px rgba(0,229,255,0.25);
   }
   .sec-zone-blue-r {
-    left: 55%; width: 10%;
+    left: 53%; width: 12%;
     background: linear-gradient(180deg, rgba(0,229,255,0.40), rgba(0,180,200,0.28));
     box-shadow: 0 0 10px rgba(0,229,255,0.5), inset 0 0 8px rgba(0,229,255,0.25);
   }
@@ -1023,7 +1060,7 @@
       </div>
       <div class="rule-row" style="margin-top:4px;color:rgba(255,255,255,0.72)">
         <b>搶攻 vs 誘敵</b>→ 子彈時間｜游標來回掃過判定條，按 <b style="color:var(--danger)">反擊！</b> 停下：
-        <br><b style="color:var(--gold)">🟡 金區 (±5%)</b> 撥擋反殺得分
+        <br><b style="color:var(--gold)">🟡 金區 (±3%)</b> 撥擋反殺得分
         ｜<b style="color:var(--cyan)">🔵 藍區 (±15%)</b> 拔距化解 · 回合重來
         ｜<span style="color:rgba(255,100,100,0.8)">⚫ 灰區</span> 被刺穿失分
       </div>
@@ -1071,6 +1108,7 @@
       <div class="hud-side">
         <span class="hud-score" id="sc2" style="color:var(--p2)">0</span>
         <span class="hud-name" id="n2" style="color:var(--p2)">光榮國中</span>
+        <span class="mood-badge" id="mood-badge"></span>
         <div class="streak-aura" id="aura-p2"></div>
       </div>
     </div>
@@ -1429,8 +1467,13 @@ const AI = {
   get subtitle() { return this.profile.subtitle; },
 
   // Runtime state
-  history: [],
-  scoreDiff: 0,
+  history: [],          // player's last moves
+  scoreDiff: 0,         // AI's score minus opponent's
+  mood: 'NORMAL',       // 'NORMAL' | 'TILT' | 'CLUTCH' | 'COCKY' | 'HESITANT'
+  lossStreak: 0,        // consecutive points lost (resets on win)
+  winStreak: 0,         // consecutive points won
+  lastLossChoice: null, // which tactic AI chose when it last lost a point
+  repeatLossCount: 0,   // how many times in a row AI lost to the same player choice
 
   select(level) {
     this.profile = AI_OPPONENTS[level] || AI_OPPONENTS.NORMAL;
@@ -1439,11 +1482,76 @@ const AI = {
   reset() {
     this.history = [];
     this.scoreDiff = 0;
+    this.mood = 'NORMAL';
+    this.lossStreak = 0;
+    this.winStreak = 0;
+    this.lastLossChoice = null;
+    this.repeatLossCount = 0;
   },
 
   recordPlayer(move) {
     this.history.push(move);
     if (this.history.length > 5) this.history.shift();
+  },
+
+  // Called after each point is awarded. `aiWon` is true if AI scored this point.
+  // `aiChoice`/`playerChoice` are the tactics that round (may be null for fouls).
+  observe(aiWon, aiChoice, playerChoice) {
+    if (aiWon) {
+      this.winStreak++;
+      this.lossStreak = 0;
+      this.repeatLossCount = 0;
+      this.lastLossChoice = null;
+    } else {
+      this.lossStreak++;
+      this.winStreak = 0;
+      // Track: is the player exploiting AI with the same counter repeatedly?
+      if (playerChoice && this.lastLossChoice === playerChoice) {
+        this.repeatLossCount++;
+      } else {
+        this.repeatLossCount = playerChoice ? 1 : 0;
+      }
+      this.lastLossChoice = playerChoice;
+    }
+    this._updateMood();
+  },
+
+  _updateMood() {
+    const prev = this.mood;
+    // Priority order: CLUTCH > HESITANT > TILT > COCKY > NORMAL
+    // Match point (either side on 4): CLUTCH — AI locks in, sharper play.
+    // Being countered by same move 2+ times: HESITANT — AI thinks longer, adapts harder.
+    // Lost 2+ in a row (and not at match point): TILT — AI gets jumpy and error-prone.
+    // Won 3+ in a row: COCKY — AI gets greedy, takes risks.
+    if (s2 >= 4 || s1 >= 4) {
+      this.mood = 'CLUTCH';
+    } else if (this.repeatLossCount >= 2) {
+      this.mood = 'HESITANT';
+    } else if (this.lossStreak >= 2) {
+      this.mood = 'TILT';
+    } else if (this.winStreak >= 3) {
+      this.mood = 'COCKY';
+    } else {
+      this.mood = 'NORMAL';
+    }
+    if (this.mood !== prev) {
+      // Tiny UI nudge: flash the HUD name subtly on mood change.
+      if (typeof showAiMood === 'function') showAiMood(this.mood, prev);
+    }
+  },
+
+  // Probability the AI false-starts this round. Only TILT bumps it up.
+  falseStartChance() {
+    return (this.mood === 'TILT') ? 0.12 : 0;
+  },
+
+  // Additional "think" delay before AI commits to slider target (in ms).
+  // HESITANT adds delay; CLUTCH adds focus time; COCKY snaps faster.
+  sliderThinkDelayBonus() {
+    if (this.mood === 'HESITANT') return 250;
+    if (this.mood === 'CLUTCH')   return 180;
+    if (this.mood === 'COCKY')    return -120;
+    return 0;
   },
 
   chooseTactic(forceAttack) {
@@ -1457,14 +1565,16 @@ const AI = {
 
     let prefs = { ...p.basePrefs };
     // Adaptation scaled by profile strength
+    let adapt = p.adaptStrength;
+    // HESITANT: double adaptation — AI reads your pattern harder
+    if (this.mood === 'HESITANT') adapt = Math.min(1.2, adapt * 2);
+
     if (recent.length >= 3) {
       if (atkRate >= 0.7) {
-        const blend = p.adaptStrength;
-        prefs.ATTACK = prefs.ATTACK * (1 - blend) + 0.22 * blend;
+        prefs.ATTACK = prefs.ATTACK * (1 - adapt) + 0.22 * adapt;
         prefs.DEFEND = 1 - prefs.ATTACK;
       } else if (atkRate <= 0.2) {
-        const blend = p.adaptStrength;
-        prefs.ATTACK = prefs.ATTACK * (1 - blend) + 0.75 * blend;
+        prefs.ATTACK = prefs.ATTACK * (1 - adapt) + 0.75 * adapt;
         prefs.DEFEND = 1 - prefs.ATTACK;
       }
     }
@@ -1477,6 +1587,26 @@ const AI = {
       prefs.DEFEND = 1 - prefs.ATTACK;
     }
 
+    // Mood-driven tilt on tactic preference
+    if (this.mood === 'TILT') {
+      // Jumpy — picks attack more often (aggression out of frustration)
+      prefs.ATTACK = Math.min(0.85, prefs.ATTACK + 0.14);
+      prefs.DEFEND = 1 - prefs.ATTACK;
+    } else if (this.mood === 'COCKY') {
+      // Showboating — much more aggressive, ripe for defending counter
+      prefs.ATTACK = Math.min(0.88, prefs.ATTACK + 0.22);
+      prefs.DEFEND = 1 - prefs.ATTACK;
+    } else if (this.mood === 'CLUTCH') {
+      // Match point — nudge toward whichever is structurally safer this turn.
+      // If losing, must attack; if winning, can afford to defend more.
+      if (this.scoreDiff < 0) {
+        prefs.ATTACK = Math.min(0.82, prefs.ATTACK + 0.10);
+      } else {
+        prefs.DEFEND = Math.min(0.68, prefs.DEFEND + 0.08);
+        prefs.ATTACK = 1 - prefs.DEFEND;
+      }
+    }
+
     return (Math.random() < prefs.ATTACK) ? 'ATTACK' : 'DEFEND';
   },
 
@@ -1485,14 +1615,30 @@ const AI = {
     const u1 = Math.random(), u2 = Math.random();
     const z = Math.sqrt(-2 * Math.log(u1 + 1e-9)) * Math.cos(2 * Math.PI * u2);
     let rtMean = p.rtMean;
+    let rtStd  = p.rtStd;
     if (this.scoreDiff <= -2) rtMean -= 0.02;
     else if (this.scoreDiff >= 2) rtMean += 0.02;
-    let rt = rtMean + z * p.rtStd;
+
+    // Mood modifiers
+    if (this.mood === 'TILT') {
+      rtStd *= 1.55;      // more erratic
+      rtMean -= 0.01;     // slightly jumpy (earlier mean)
+    } else if (this.mood === 'CLUTCH') {
+      rtMean -= 0.05;     // sharpest reactions — ~50ms faster
+      rtStd  *= 0.75;     // very consistent
+    } else if (this.mood === 'COCKY') {
+      rtMean -= 0.02;     // fast but sloppy
+      rtStd  *= 1.25;
+    } else if (this.mood === 'HESITANT') {
+      rtMean += 0.04;     // slower, thinking
+    }
+
+    let rt = rtMean + z * rtStd;
     rt = Math.max(0.17, Math.min(0.65, rt));
     return rt * 1000;
   },
 
-  // Slider QTE: roll target X (0-100) weighted by profile skill.
+  // Slider QTE: roll target X (0-100) weighted by profile skill + mood.
   // AI will "naturally" stop at this X when the cursor crosses it.
   rollSliderTarget() {
     const p = this.profile;
@@ -1505,16 +1651,36 @@ const AI = {
     } else if (this.scoreDiff >= 2) {
       perfectRate = Math.max(0.05, perfectRate - 0.05);
     }
+
+    // Mood modifiers
+    if (this.mood === 'TILT') {
+      // Shaky hands — more misses
+      perfectRate = Math.max(0.02, perfectRate - 0.08);
+      goodRate    = Math.max(0.10, goodRate    - 0.08);
+    } else if (this.mood === 'CLUTCH') {
+      // Match point focus — more golds
+      perfectRate = Math.min(0.55, perfectRate + 0.12);
+      goodRate    = Math.min(0.55, goodRate    + 0.04);
+    } else if (this.mood === 'COCKY') {
+      // Going for glory — more gold attempts but also more misses
+      perfectRate = Math.min(0.45, perfectRate + 0.08);
+      goodRate    = Math.max(0.15, goodRate    - 0.12);
+    } else if (this.mood === 'HESITANT') {
+      // More cautious aiming — shifts from perfect to good (safer)
+      perfectRate = Math.max(0.05, perfectRate - 0.06);
+      goodRate    = Math.min(0.60, goodRate    + 0.12);
+    }
+
     const r = Math.random();
     if (r < perfectRate) {
-      // Gold zone: 45-55 (slight bias away from exact edges)
-      return 46 + Math.random() * 8;
+      // Gold zone: 47-53 (tight ±3%, bias toward center)
+      return 48 + Math.random() * 4;
     }
     if (r < perfectRate + goodRate) {
-      // Blue zones: either 35-44 or 56-65
+      // Blue zones: either 36-46 or 54-64
       return (Math.random() < 0.5)
-        ? 36 + Math.random() * 8     // left blue
-        : 57 + Math.random() * 8;    // right blue
+        ? 36 + Math.random() * 10    // left blue
+        : 54 + Math.random() * 10;   // right blue
     }
     // Gray zone (fail): avoid absolute extremes so it still looks like an attempt
     return (Math.random() < 0.5)
@@ -1633,6 +1799,46 @@ function updateStreakAura() {
 }
 
 // ============================================================
+// AI MOOD BADGE — flashes a small status pill beside opponent's name
+// when AI's psychological state changes
+// ============================================================
+let moodBadgeTimer = null;
+const MOOD_LABELS = {
+  TILT:     { text: '🔥 急躁',  cls: 'tilt'     },
+  CLUTCH:   { text: '❄ 冷靜',  cls: 'clutch'   },
+  COCKY:    { text: '😤 自滿',  cls: 'cocky'    },
+  HESITANT: { text: '🤔 遲疑',  cls: 'hesitant' }
+};
+function showAiMood(mood, prev) {
+  const el = document.getElementById('mood-badge');
+  if (!el) return;
+  if (moodBadgeTimer) { clearTimeout(moodBadgeTimer); moodBadgeTimer = null; }
+
+  if (mood === 'NORMAL') {
+    // Fade out on return to baseline
+    el.classList.remove('show', 'tilt', 'clutch', 'cocky', 'hesitant');
+    el.textContent = '';
+    return;
+  }
+  const info = MOOD_LABELS[mood];
+  if (!info) return;
+  el.classList.remove('tilt', 'clutch', 'cocky', 'hesitant');
+  // restart animation
+  el.style.animation = 'none';
+  void el.offsetWidth;
+  el.style.animation = '';
+  el.classList.add('show', info.cls);
+  el.textContent = info.text;
+  // CLUTCH persists until mood changes; others auto-fade after 3.2s
+  // (but state internally stays — it's just the visual pill that retreats)
+  if (mood !== 'CLUTCH') {
+    moodBadgeTimer = setTimeout(() => {
+      el.classList.remove('show');
+    }, 3200);
+  }
+}
+
+// ============================================================
 // FLOW: MENU → GAME
 // ============================================================
 function enterGame() {
@@ -1656,6 +1862,9 @@ function enterGame() {
   streak = { P1: 0, P2: 0 };
   stats = { p1Best: 999, p2Best: 999, p1RTs: [], p2RTs: [], doubles: 0, nonCombats: 0, fouls: 0 };
   AI.reset();
+  // Reset mood badge visual
+  const mb = document.getElementById('mood-badge');
+  if (mb) { mb.classList.remove('show', 'tilt', 'clutch', 'cocky', 'hesitant'); mb.textContent = ''; }
   updatePassivityUI();
   updateStreakAura();
   prepareRound();
@@ -1868,6 +2077,20 @@ function enterWaitPhase() {
   timers.push(setTimeout(() => {
     if (state === 'WAIT') triggerAllez();
   }, delay));
+
+  // AI false start: TILT mood gives AI a chance to jump the gun.
+  // The tap fires BEFORE Allez! happens → callFoul('P2') awards P1 a point.
+  if (mode === 'SINGLE' && Math.random() < AI.falseStartChance()) {
+    // Fire somewhere between 0.8s and (delay - 0.2s) — i.e. definitely too early
+    const maxEarly = Math.max(900, delay - 300);
+    const earlyMs = 800 + Math.random() * (maxEarly - 800);
+    timers.push(setTimeout(() => {
+      if (state === 'WAIT') {
+        // Reuse existing foul path — P2 tapped before Allez
+        callFoul('P2');
+      }
+    }, earlyMs));
+  }
 }
 
 function triggerAllez() {
@@ -2278,8 +2501,8 @@ let sliderActive = false;
 let secResolved = false;
 let secPromiseRes = null;
 let secAITargetX = null;    // AI's target X; null for human path
-const SLIDER_SPEED_SINGLE = 100 / 650;   // %/ms — SINGLE: full crossing ~650ms, round-trip ~1.3s
-const SLIDER_SPEED_PVP    = 100 / 480;   // %/ms — PVP: full crossing ~480ms, round-trip ~0.96s (35% faster)
+const SLIDER_SPEED_SINGLE = 100 / 500;   // %/ms — SINGLE: full crossing ~500ms, round-trip ~1.0s  (faster than before)
+const SLIDER_SPEED_PVP    = 100 / 420;   // %/ms — PVP: full crossing ~420ms, round-trip ~0.84s
 
 function _sliderTick(now) {
   if (!sliderActive) return;
@@ -2381,7 +2604,9 @@ function enterSecondaryDefense(defPlayer) {
     if (mode === 'SINGLE' && defPlayer === 'P2') {
       const targetX = AI.rollSliderTarget();
       // Delay before AI starts "aiming" (else it'd stop immediately on first frame)
-      const delayMs = 400 + Math.random() * 500;
+      // Mood-adjusted: HESITANT/CLUTCH aim longer, COCKY snaps faster.
+      const baseDelay = 400 + Math.random() * 500;
+      const delayMs = Math.max(180, baseDelay + AI.sliderThinkDelayBonus());
       setTimeout(() => {
         if (!secResolved) secAITargetX = targetX;
       }, delayMs);
@@ -2407,10 +2632,10 @@ document.getElementById('p2-sec-go').addEventListener('pointerdown', e => {
 function resolveSecondaryDefense(initial, sec) {
   const { atkPlayer, defPlayer } = initial;
   const { x } = sec;
-  if (x >= 45 && x <= 55) {
+  if (x >= 47 && x <= 53) {
     return { type: 'parry', winner: defPlayer, defPlayer, atkPlayer, zone: 'perfect', sliderX: x };
   }
-  if ((x >= 35 && x < 45) || (x > 55 && x <= 65)) {
+  if ((x >= 35 && x < 47) || (x > 53 && x <= 65)) {
     return { type: 'attack_no', winner: 'NONE', defPlayer, atkPlayer, zone: 'good', sliderX: x };
   }
   return { type: 'piercing', winner: atkPlayer, defPlayer, atkPlayer, zone: 'fail', sliderX: x, failReason: 'bad_timing' };
@@ -2546,7 +2771,12 @@ function awardPoint(winner, breakStreak) {
   popScore(winner === 'P1' ? 'sc1' : 'sc2');
   updateStreakAura();
 
-  if (mode === 'SINGLE') AI.updateScoreDiff(s2, s1);
+  if (mode === 'SINGLE') {
+    AI.updateScoreDiff(s2, s1);
+    // Observe outcome for mood state: aiWon iff P2 won the point.
+    // Pass the tactic each side chose this round (c1 = player, c2 = AI).
+    AI.observe(winner === 'P2', c2, c1);
+  }
 
   if (s1 >= 5 || s2 >= 5) {
     state = 'GAMEOVER';
